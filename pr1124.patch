@@ -1,0 +1,2975 @@
+From a7f59fc421e5bf54011ff1494aece00064d6b122 Mon Sep 17 00:00:00 2001
+From: Stradex <stradexengine@gmail.com>
+Date: Thu, 31 Oct 2024 21:06:59 -0300
+Subject: [PATCH] FIX: Linux build labels does does not render if AutoSize is
+ true in many cases
+
+---
+ .../Controls/ArgumentsControl.Designer.cs     |  5 ++
+ Source/Core/Controls/ColorControl.Designer.cs |  1 +
+ .../CommandPaletteControl.Designer.cs         |  1 +
+ .../Core/Controls/CommentEditor.Designer.cs   |  1 +
+ .../ExternalCommandControl.Designer.cs        |  2 +
+ Source/Core/Controls/HintsPanel.Designer.cs   |  1 +
+ .../Controls/ImageBrowserControl.Designer.cs  |  5 ++
+ .../Controls/LinedefInfoPanel.Designer.cs     | 62 +++++++++++++++++++
+ .../Core/Controls/SectorInfoPanel.Designer.cs | 32 ++++++++++
+ .../Controls/SectorSlopeControl.Designer.cs   |  4 ++
+ .../SidedefPartLightControl.Designer.cs       |  1 +
+ .../Controls/StatisticsControl.Designer.cs    | 10 +++
+ Source/Core/Controls/TagSelector.Designer.cs  |  1 +
+ Source/Core/Controls/TagsSelector.Designer.cs |  2 +
+ .../Controls/ThingBrowserControl.Designer.cs  |  9 +++
+ .../Core/Controls/ThingInfoPanel.Designer.cs  | 19 ++++++
+ Source/Core/Controls/ToastControl.Designer.cs |  2 +
+ .../Core/Controls/VertexInfoPanel.Designer.cs |  5 ++
+ Source/Core/Windows/AboutForm.Designer.cs     |  5 +-
+ .../Windows/ActionBrowserForm.Designer.cs     | 11 +++-
+ .../CenterOnCoordinatesForm.Designer.cs       |  4 +-
+ Source/Core/Windows/ConfigForm.Designer.cs    |  8 ++-
+ .../Windows/EffectBrowserForm.Designer.cs     | 11 +++-
+ .../Core/Windows/ExceptionDialog.designer.cs  |  3 +-
+ Source/Core/Windows/GridSetupForm.Designer.cs |  4 +-
+ .../LinedefColorPresetsForm.Designer.cs       |  4 +-
+ .../Core/Windows/LinedefEditForm.Designer.cs  |  4 +-
+ .../Windows/LinedefEditFormUDMF.Designer.cs   | 20 +++++-
+ Source/Core/Windows/MainForm.Designer.cs      |  4 +-
+ .../Core/Windows/MapOptionsForm.Designer.cs   |  5 +-
+ .../Windows/OpenMapOptionsForm.Designer.cs    |  4 +-
+ .../PreAndPostCommandsForm.Designer.cs        |  4 +-
+ .../Core/Windows/PreferencesForm.Designer.cs  | 52 +++++++++++++++-
+ .../Windows/ResourceOptionsForm.Designer.cs   |  4 +-
+ .../Windows/ScriptFindReplaceForm.Designer.cs |  7 ++-
+ .../Windows/ScriptGoToLineForm.Designer.cs    |  3 +-
+ .../Core/Windows/SectorEditForm.Designer.cs   |  4 +-
+ .../Windows/SectorEditFormUDMF.Designer.cs    | 24 ++++++-
+ .../Core/Windows/TextureSetForm.Designer.cs   |  6 +-
+ Source/Core/Windows/ThingEditForm.Designer.cs |  6 +-
+ .../Windows/ThingEditFormUDMF.Designer.cs     | 18 +++++-
+ .../Windows/ThingsFiltersForm.Designer.cs     | 18 +++++-
+ Source/Core/Windows/ThingsFiltersForm.cs      |  2 +-
+ Source/Core/Windows/UpdateForm.Designer.cs    |  4 +-
+ .../Controls/ThreeDFloorControl.Designer.cs   | 10 +++
+ .../ThreeDFloorTooltipControl.Designer.cs     |  6 ++
+ .../Interface/PreferencesForm.Designer.cs     |  5 +-
+ .../ControlSectorAreaConfig.Designer.cs       |  4 +-
+ .../Windows/SlopeVertexEditForm.Designer.cs   |  5 +-
+ .../ThreeDFloorEditorWindow.Designer.cs       |  3 +-
+ .../Controls/BoolControl.designer.cs          |  1 +
+ .../Controls/IntControl.designer.cs           |  2 +
+ .../Interface/JitterSectorsForm.Designer.cs   |  4 +-
+ .../Interface/JitterThingsForm.Designer.cs    |  6 +-
+ .../ObjImportSettingsForm.Designer.cs         |  5 +-
+ .../Interface/BridgeModeForm.Designer.cs      |  6 +-
+ .../ChangeMapElementIndexForm.Designer.cs     |  7 ++-
+ .../DrawGridOptionsPanel.Designer.cs          |  5 ++
+ .../Interface/EditSelectionPanel.Designer.cs  | 16 +++++
+ .../Interface/ErrorCheckForm.Designer.cs      |  3 +-
+ .../Interface/FindReplaceForm.Designer.cs     |  4 +-
+ .../Interface/FitTexturesForm.Designer.cs     |  6 +-
+ .../ImageExportSettingsForm.Designer.cs       | 17 +++--
+ .../Interface/MakeDoorForm.Designer.cs        |  6 +-
+ .../ObjExporterSettingsForm.Designer.cs       |  3 +-
+ .../Interface/PreferencesForm.Designer.cs     | 20 +++++-
+ .../SectorDrawingOptionsPanel.Designer.cs     |  2 +
+ .../Interface/SlopeArchForm.Designer.cs       |  6 +-
+ .../WavefrontSettingsForm.Designer.cs         |  9 ++-
+ .../Controls/ColorPickerControl.designer.cs   |  3 +
+ .../Controls/ColorPickerSlider.Designer.cs    |  3 +
+ .../Plugins/NodesViewer/NodesForm.Designer.cs | 45 +++++++++++++-
+ .../StairSectorBuilderForm.designer.cs        | 24 ++++++-
+ .../Controls/TagExplorer.Designer.cs          |  3 +
+ .../Plugins/TagRange/TagRangeForm.Designer.cs |  9 ++-
+ .../Controls/ScriptDockerControl.Designer.cs  |  5 ++
+ .../Windows/PreferencesForm.Designer.cs       |  3 +-
+ .../Windows/ScriptRunnerForm.Designer.cs      |  3 +-
+ .../Windows/UDBScriptErrorForm.Designer.cs    |  3 +-
+ .../Windows/SetCustomHeightDialog.Designer.cs |  1 +
+ Source/Tools/Updater/MainForm.Designer.cs     |  1 +
+ .../Updater/UpdateBlockedForm.Designer.cs     |  3 +-
+ 82 files changed, 613 insertions(+), 56 deletions(-)
+
+diff --git a/Source/Core/Controls/ArgumentsControl.Designer.cs b/Source/Core/Controls/ArgumentsControl.Designer.cs
+index be8387915..f52a03472 100755
+--- a/Source/Core/Controls/ArgumentsControl.Designer.cs
++++ b/Source/Core/Controls/ArgumentsControl.Designer.cs
+@@ -32,13 +32,18 @@ private void InitializeComponent() {
+             this.arg0named = new CodeImp.DoomBuilder.Controls.ColoredComboBox();
+             this.arg0int = new CodeImp.DoomBuilder.Controls.ColoredComboBox();
+             this.arg0label = new System.Windows.Forms.Label();
++            this.arg0label.AutoSize = true;
+             this.arg1label = new System.Windows.Forms.Label();
++            this.arg1label.AutoSize = true;
+             this.arg2label = new System.Windows.Forms.Label();
++            this.arg2label.AutoSize = true;
+             this.arg0 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+             this.arg1 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+             this.arg2 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+             this.arg3label = new System.Windows.Forms.Label();
++            this.arg3label.AutoSize = true;
+             this.arg4label = new System.Windows.Forms.Label();
++            this.arg4label.AutoSize = true;
+             this.arg3 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+             this.arg4 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+             this.tooltip = new System.Windows.Forms.ToolTip(this.components);
+diff --git a/Source/Core/Controls/ColorControl.Designer.cs b/Source/Core/Controls/ColorControl.Designer.cs
+index accedbf16..d2b7d9802 100755
+--- a/Source/Core/Controls/ColorControl.Designer.cs
++++ b/Source/Core/Controls/ColorControl.Designer.cs
+@@ -29,6 +29,7 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent()
+ 		{
+ 			this.label = new System.Windows.Forms.Label();
++			this.label.AutoSize = true;
+ 			this.panel = new System.Windows.Forms.Panel();
+ 			this.dialog = new System.Windows.Forms.ColorDialog();
+ 			this.SuspendLayout();
+diff --git a/Source/Core/Controls/CommandPaletteControl.Designer.cs b/Source/Core/Controls/CommandPaletteControl.Designer.cs
+index 7b7be86df..e5e6db486 100644
+--- a/Source/Core/Controls/CommandPaletteControl.Designer.cs
++++ b/Source/Core/Controls/CommandPaletteControl.Designer.cs
+@@ -34,6 +34,7 @@ private void InitializeComponent()
+ 			System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Not usable in this context", System.Windows.Forms.HorizontalAlignment.Left);
+ 			this.commandsearch = new System.Windows.Forms.TextBox();
+ 			this.noresults = new System.Windows.Forms.Label();
++			this.noresults.AutoSize = true;
+ 			this.commandlist = new CodeImp.DoomBuilder.Controls.OptimizedListView();
+ 			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+ 			this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+diff --git a/Source/Core/Controls/CommentEditor.Designer.cs b/Source/Core/Controls/CommentEditor.Designer.cs
+index b18ceb135..ceabbe3a2 100755
+--- a/Source/Core/Controls/CommentEditor.Designer.cs
++++ b/Source/Core/Controls/CommentEditor.Designer.cs
+@@ -28,6 +28,7 @@ private void InitializeComponent() {
+ 			this.textbox = new System.Windows.Forms.TextBox();
+ 			this.clear = new System.Windows.Forms.Button();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.radioButton1 = new System.Windows.Forms.RadioButton();
+ 			this.radioButton2 = new System.Windows.Forms.RadioButton();
+ 			this.radioButton3 = new System.Windows.Forms.RadioButton();
+diff --git a/Source/Core/Controls/ExternalCommandControl.Designer.cs b/Source/Core/Controls/ExternalCommandControl.Designer.cs
+index ca16d1ad9..4c63bcd48 100644
+--- a/Source/Core/Controls/ExternalCommandControl.Designer.cs
++++ b/Source/Core/Controls/ExternalCommandControl.Designer.cs
+@@ -31,7 +31,9 @@ private void InitializeComponent()
+ 			this.tbFolder = new System.Windows.Forms.TextBox();
+ 			this.tbCommand = new System.Windows.Forms.TextBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.btnBrowseFolder = new System.Windows.Forms.Button();
+ 			this.cbAutoclose = new System.Windows.Forms.CheckBox();
+ 			this.cbExitCode = new System.Windows.Forms.CheckBox();
+diff --git a/Source/Core/Controls/HintsPanel.Designer.cs b/Source/Core/Controls/HintsPanel.Designer.cs
+index de3ea1236..35b9810e8 100755
+--- a/Source/Core/Controls/HintsPanel.Designer.cs
++++ b/Source/Core/Controls/HintsPanel.Designer.cs
+@@ -30,6 +30,7 @@ private void InitializeComponent()
+ 		{
+ 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(HintsPanel));
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.hints = new System.Windows.Forms.RichTextBox();
+ 			this.SuspendLayout();
+ 			// 
+diff --git a/Source/Core/Controls/ImageBrowserControl.Designer.cs b/Source/Core/Controls/ImageBrowserControl.Designer.cs
+index da1489eab..b8a8a827c 100755
+--- a/Source/Core/Controls/ImageBrowserControl.Designer.cs
++++ b/Source/Core/Controls/ImageBrowserControl.Designer.cs
+@@ -31,7 +31,9 @@ private void InitializeComponent()
+ 		{
+ 			this.components = new System.ComponentModel.Container();
+ 			this.labelMixMode = new System.Windows.Forms.Label();
++			this.labelMixMode.AutoSize = true;
+ 			this.label = new System.Windows.Forms.Label();
++			this.label.AutoSize = true;
+ 			this.splitter = new System.Windows.Forms.SplitContainer();
+ 			this.list = new CodeImp.DoomBuilder.Controls.ImageSelectorPanel();
+ 			this.centeritem = new System.Windows.Forms.CheckBox();
+@@ -39,11 +41,14 @@ private void InitializeComponent()
+ 			this.objectclear = new System.Windows.Forms.Button();
+ 			this.sizecombo = new System.Windows.Forms.ComboBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.usedtexturesfirst = new System.Windows.Forms.CheckBox();
+ 			this.longtexturenames = new System.Windows.Forms.CheckBox();
+ 			this.filterheightlabel = new System.Windows.Forms.Label();
++			this.filterheightlabel.AutoSize = true;
+ 			this.filterHeight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.filterwidthlabel = new System.Windows.Forms.Label();
++			this.filterwidthlabel.AutoSize = true;
+ 			this.filterWidth = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.texturetypecombo = new System.Windows.Forms.ComboBox();
+ 			this.objectname = new System.Windows.Forms.TextBox();
+diff --git a/Source/Core/Controls/LinedefInfoPanel.Designer.cs b/Source/Core/Controls/LinedefInfoPanel.Designer.cs
+index 4079118a0..205cd5200 100755
+--- a/Source/Core/Controls/LinedefInfoPanel.Designer.cs
++++ b/Source/Core/Controls/LinedefInfoPanel.Designer.cs
+@@ -29,81 +29,143 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent()
+ 		{
+ 			this.actionlabel = new System.Windows.Forms.Label();
++			this.actionlabel.AutoSize = true;
+ 			this.activationlabel = new System.Windows.Forms.Label();
++			this.activationlabel.AutoSize = true;
+ 			this.taglabel = new System.Windows.Forms.Label();
++			this.taglabel.AutoSize = true;
+ 			this.anglelabel = new System.Windows.Forms.Label();
++			this.anglelabel.AutoSize = true;
+ 			this.lengthlabel = new System.Windows.Forms.Label();
++			this.lengthlabel.AutoSize = true;
+ 			this.infopanel = new System.Windows.Forms.GroupBox();
+ 			this.activation = new System.Windows.Forms.Label();
++			this.activation.AutoSize = true;
+ 			this.unpegged = new System.Windows.Forms.Label();
++			this.unpegged.AutoSize = true;
+ 			this.peglabel = new System.Windows.Forms.Label();
++			this.peglabel.AutoSize = true;
+ 			this.arg5 = new System.Windows.Forms.Label();
++			this.arg5.AutoSize = true;
+ 			this.arglbl5 = new System.Windows.Forms.Label();
++			this.arglbl5.AutoSize = true;
+ 			this.arglbl4 = new System.Windows.Forms.Label();
++			this.arglbl4.AutoSize = true;
+ 			this.arg4 = new System.Windows.Forms.Label();
++			this.arg4.AutoSize = true;
+ 			this.arglbl3 = new System.Windows.Forms.Label();
++			this.arglbl3.AutoSize = true;
+ 			this.arglbl2 = new System.Windows.Forms.Label();
++			this.arglbl2.AutoSize = true;
+ 			this.arg3 = new System.Windows.Forms.Label();
++			this.arg3.AutoSize = true;
+ 			this.arglbl1 = new System.Windows.Forms.Label();
++			this.arglbl1.AutoSize = true;
+ 			this.arg2 = new System.Windows.Forms.Label();
++			this.arg2.AutoSize = true;
+ 			this.backoffset = new System.Windows.Forms.Label();
++			this.backoffset.AutoSize = true;
+ 			this.arg1 = new System.Windows.Forms.Label();
++			this.arg1.AutoSize = true;
+ 			this.backoffsetlabel = new System.Windows.Forms.Label();
++			this.backoffsetlabel.AutoSize = true;
+ 			this.frontoffset = new System.Windows.Forms.Label();
++			this.frontoffset.AutoSize = true;
+ 			this.frontoffsetlabel = new System.Windows.Forms.Label();
++			this.frontoffsetlabel.AutoSize = true;
+ 			this.tag = new System.Windows.Forms.Label();
++			this.tag.AutoSize = true;
+ 			this.angle = new System.Windows.Forms.Label();
++			this.angle.AutoSize = true;
+ 			this.length = new System.Windows.Forms.Label();
++			this.length.AutoSize = true;
+ 			this.action = new System.Windows.Forms.Label();
++			this.action.AutoSize = true;
+ 			this.frontpanel = new System.Windows.Forms.GroupBox();
+ 			this.flowLayoutPanelFront = new System.Windows.Forms.FlowLayoutPanel();
+ 			this.panelFrontTop = new System.Windows.Forms.Panel();
+ 			this.labelTextureFrontTop = new System.Windows.Forms.Label();
++			this.labelTextureFrontTop.AutoSize = true;
+ 			this.fronthightex = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.frontTopUDMFOffsetLabel = new System.Windows.Forms.Label();
++			this.frontTopUDMFOffsetLabel.AutoSize = true;
+ 			this.frontTopUDMFOffset = new System.Windows.Forms.Label();
++			this.frontTopUDMFOffset.AutoSize = true;
+ 			this.frontTopUDMFScaleLabel = new System.Windows.Forms.Label();
++			this.frontTopUDMFScaleLabel.AutoSize = true;
+ 			this.frontTopUDMFScale = new System.Windows.Forms.Label();
++			this.frontTopUDMFScale.AutoSize = true;
+ 			this.fronthighname = new System.Windows.Forms.Label();
++			this.fronthighname.AutoSize = true;
+ 			this.panelFrontMid = new System.Windows.Forms.Panel();
+ 			this.frontMidUDMFOffsetLabel = new System.Windows.Forms.Label();
++			this.frontMidUDMFOffsetLabel.AutoSize = true;
+ 			this.frontMidUDMFOffset = new System.Windows.Forms.Label();
++			this.frontMidUDMFOffset.AutoSize = true;
+ 			this.frontMidUDMFScaleLabel = new System.Windows.Forms.Label();
++			this.frontMidUDMFScaleLabel.AutoSize = true;
+ 			this.frontMidUDMFScale = new System.Windows.Forms.Label();
++			this.frontMidUDMFScale.AutoSize = true;
+ 			this.labelTextureFrontMid = new System.Windows.Forms.Label();
++			this.labelTextureFrontMid.AutoSize = true;
+ 			this.frontmidtex = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.frontmidname = new System.Windows.Forms.Label();
++			this.frontmidname.AutoSize = true;
+ 			this.panelFrontLow = new System.Windows.Forms.Panel();
+ 			this.labelTextureFrontBottom = new System.Windows.Forms.Label();
++			this.labelTextureFrontBottom.AutoSize = true;
+ 			this.frontlowtex = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.frontBottomUDMFOffsetLabel = new System.Windows.Forms.Label();
++			this.frontBottomUDMFOffsetLabel.AutoSize = true;
+ 			this.frontBottomUDMFOffset = new System.Windows.Forms.Label();
++			this.frontBottomUDMFOffset.AutoSize = true;
+ 			this.frontBottomUDMFScaleLabel = new System.Windows.Forms.Label();
++			this.frontBottomUDMFScaleLabel.AutoSize = true;
+ 			this.frontBottomUDMFScale = new System.Windows.Forms.Label();
++			this.frontBottomUDMFScale.AutoSize = true;
+ 			this.frontlowname = new System.Windows.Forms.Label();
++			this.frontlowname.AutoSize = true;
+ 			this.backpanel = new System.Windows.Forms.GroupBox();
+ 			this.flowLayoutPanelBack = new System.Windows.Forms.FlowLayoutPanel();
+ 			this.panelBackTop = new System.Windows.Forms.Panel();
+ 			this.backTopUDMFOffsetLabel = new System.Windows.Forms.Label();
++			this.backTopUDMFOffsetLabel.AutoSize = true;
+ 			this.backTopUDMFOffset = new System.Windows.Forms.Label();
++			this.backTopUDMFOffset.AutoSize = true;
+ 			this.backTopUDMFScaleLabel = new System.Windows.Forms.Label();
++			this.backTopUDMFScaleLabel.AutoSize = true;
+ 			this.backTopUDMFScale = new System.Windows.Forms.Label();
++			this.backTopUDMFScale.AutoSize = true;
+ 			this.labelTextureBackTop = new System.Windows.Forms.Label();
++			this.labelTextureBackTop.AutoSize = true;
+ 			this.backhighname = new System.Windows.Forms.Label();
++			this.backhighname.AutoSize = true;
+ 			this.panelBackMid = new System.Windows.Forms.Panel();
+ 			this.backMidUDMFOffsetLabel = new System.Windows.Forms.Label();
++			this.backMidUDMFOffsetLabel.AutoSize = true;
+ 			this.backMidUDMFOffset = new System.Windows.Forms.Label();
++			this.backMidUDMFOffset.AutoSize = true;
+ 			this.backMidUDMFScaleLabel = new System.Windows.Forms.Label();
++			this.backMidUDMFScaleLabel.AutoSize = true;
+ 			this.backMidUDMFScale = new System.Windows.Forms.Label();
++			this.backMidUDMFScale.AutoSize = true;
+ 			this.labelTextureBackMid = new System.Windows.Forms.Label();
++			this.labelTextureBackMid.AutoSize = true;
+ 			this.backmidname = new System.Windows.Forms.Label();
++			this.backmidname.AutoSize = true;
+ 			this.panelBackLow = new System.Windows.Forms.Panel();
+ 			this.backBottomUDMFOffsetLabel = new System.Windows.Forms.Label();
++			this.backBottomUDMFOffsetLabel.AutoSize = true;
+ 			this.backBottomUDMFOffset = new System.Windows.Forms.Label();
++			this.backBottomUDMFOffset.AutoSize = true;
+ 			this.backBottomUDMFScaleLabel = new System.Windows.Forms.Label();
++			this.backBottomUDMFScaleLabel.AutoSize = true;
+ 			this.backBottomUDMFScale = new System.Windows.Forms.Label();
++			this.backBottomUDMFScale.AutoSize = true;
+ 			this.labelTextureBackBottom = new System.Windows.Forms.Label();
++			this.labelTextureBackBottom.AutoSize = true;
+ 			this.backlowname = new System.Windows.Forms.Label();
++			this.backlowname.AutoSize = true;
+ 			this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+ 			this.flagsPanel = new System.Windows.Forms.GroupBox();
+ 			this.flags = new CodeImp.DoomBuilder.Controls.TransparentListView();
+diff --git a/Source/Core/Controls/SectorInfoPanel.Designer.cs b/Source/Core/Controls/SectorInfoPanel.Designer.cs
+index 1d5e91167..053fc5f0c 100755
+--- a/Source/Core/Controls/SectorInfoPanel.Designer.cs
++++ b/Source/Core/Controls/SectorInfoPanel.Designer.cs
+@@ -31,44 +31,76 @@ private void InitializeComponent()
+ 			System.Windows.Forms.Label label13;
+ 			System.Windows.Forms.Label label5;
+ 			this.labelfloor = new System.Windows.Forms.Label();
++			this.labelfloor.AutoSize = true;
+ 			this.labelceiling = new System.Windows.Forms.Label();
++			this.labelceiling.AutoSize = true;
+ 			this.taglabel = new System.Windows.Forms.Label();
++			this.taglabel.AutoSize = true;
+ 			this.effectlabel = new System.Windows.Forms.Label();
++			this.effectlabel.AutoSize = true;
+ 			this.ceilingLightLabel = new System.Windows.Forms.Label();
++			this.ceilingLightLabel.AutoSize = true;
+ 			this.ceilingScaleLabel = new System.Windows.Forms.Label();
++			this.ceilingScaleLabel.AutoSize = true;
+ 			this.ceilingAngleLabel = new System.Windows.Forms.Label();
++			this.ceilingAngleLabel.AutoSize = true;
+ 			this.ceilingOffsetLabel = new System.Windows.Forms.Label();
++			this.ceilingOffsetLabel.AutoSize = true;
+ 			this.floorOffsetLabel = new System.Windows.Forms.Label();
++			this.floorOffsetLabel.AutoSize = true;
+ 			this.floorLightLabel = new System.Windows.Forms.Label();
++			this.floorLightLabel.AutoSize = true;
+ 			this.floorAngleLabel = new System.Windows.Forms.Label();
++			this.floorAngleLabel.AutoSize = true;
+ 			this.floorScaleLabel = new System.Windows.Forms.Label();
++			this.floorScaleLabel.AutoSize = true;
+ 			this.sectorinfo = new System.Windows.Forms.GroupBox();
+ 			this.panelFadeColor = new System.Windows.Forms.Panel();
+ 			this.panelLightColor = new System.Windows.Forms.Panel();
+ 			this.labelFade = new System.Windows.Forms.Label();
++			this.labelFade.AutoSize = true;
+ 			this.labelLight = new System.Windows.Forms.Label();
++			this.labelLight.AutoSize = true;
+ 			this.brightness = new System.Windows.Forms.Label();
++			this.brightness.AutoSize = true;
+ 			this.height = new System.Windows.Forms.Label();
++			this.height.AutoSize = true;
+ 			this.tag = new System.Windows.Forms.Label();
++			this.tag.AutoSize = true;
+ 			this.floor = new System.Windows.Forms.Label();
++			this.floor.AutoSize = true;
+ 			this.ceiling = new System.Windows.Forms.Label();
++			this.ceiling.AutoSize = true;
+ 			this.effect = new System.Windows.Forms.Label();
++			this.effect.AutoSize = true;
+ 			this.ceilingLight = new System.Windows.Forms.Label();
++			this.ceilingLight.AutoSize = true;
+ 			this.ceilingScale = new System.Windows.Forms.Label();
++			this.ceilingScale.AutoSize = true;
+ 			this.ceilingAngle = new System.Windows.Forms.Label();
++			this.ceilingAngle.AutoSize = true;
+ 			this.ceilingOffset = new System.Windows.Forms.Label();
++			this.ceilingOffset.AutoSize = true;
+ 			this.ceilingpanel = new System.Windows.Forms.GroupBox();
+ 			this.labelCeilTextureSize = new System.Windows.Forms.Label();
++			this.labelCeilTextureSize.AutoSize = true;
+ 			this.ceilingtex = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.ceilingname = new System.Windows.Forms.Label();
++			this.ceilingname.AutoSize = true;
+ 			this.floorpanel = new System.Windows.Forms.GroupBox();
+ 			this.labelFloorTextureSize = new System.Windows.Forms.Label();
++			this.labelFloorTextureSize.AutoSize = true;
+ 			this.floortex = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.floorLight = new System.Windows.Forms.Label();
++			this.floorLight.AutoSize = true;
+ 			this.floorScale = new System.Windows.Forms.Label();
++			this.floorScale.AutoSize = true;
+ 			this.floorOffset = new System.Windows.Forms.Label();
++			this.floorOffset.AutoSize = true;
+ 			this.floorAngle = new System.Windows.Forms.Label();
++			this.floorAngle.AutoSize = true;
+ 			this.floorname = new System.Windows.Forms.Label();
++			this.floorname.AutoSize = true;
+ 			this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+ 			this.flagsPanel = new System.Windows.Forms.GroupBox();
+ 			this.flags = new CodeImp.DoomBuilder.Controls.TransparentListView();
+diff --git a/Source/Core/Controls/SectorSlopeControl.Designer.cs b/Source/Core/Controls/SectorSlopeControl.Designer.cs
+index f12828fad..bca846585 100755
+--- a/Source/Core/Controls/SectorSlopeControl.Designer.cs
++++ b/Source/Core/Controls/SectorSlopeControl.Designer.cs
+@@ -29,11 +29,15 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent() 
+ 		{
+ 			this.label23 = new System.Windows.Forms.Label();
++			this.label23.AutoSize = true;
+ 			this.label24 = new System.Windows.Forms.Label();
++			this.label24.AutoSize = true;
+ 			this.reset = new System.Windows.Forms.Button();
+ 			this.label18 = new System.Windows.Forms.Label();
++			this.label18.AutoSize = true;
+ 			this.angletrackbar = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.pivotmodeselector = new System.Windows.Forms.ComboBox();
+ 			this.cbuselineangles = new System.Windows.Forms.CheckBox();
+ 			this.rotationcontrol = new CodeImp.DoomBuilder.Controls.AngleControlEx();
+diff --git a/Source/Core/Controls/SidedefPartLightControl.Designer.cs b/Source/Core/Controls/SidedefPartLightControl.Designer.cs
+index 3e86ddfff..97bfd7b29 100644
+--- a/Source/Core/Controls/SidedefPartLightControl.Designer.cs
++++ b/Source/Core/Controls/SidedefPartLightControl.Designer.cs
+@@ -29,6 +29,7 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent()
+ 		{
+ 			this.lbLight = new System.Windows.Forms.Label();
++			this.lbLight.AutoSize = true;
+ 			this.cbAbsolute = new System.Windows.Forms.CheckBox();
+ 			this.reset = new System.Windows.Forms.Button();
+ 			this.light = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+diff --git a/Source/Core/Controls/StatisticsControl.Designer.cs b/Source/Core/Controls/StatisticsControl.Designer.cs
+index f5132eacc..2b5dd53a1 100755
+--- a/Source/Core/Controls/StatisticsControl.Designer.cs
++++ b/Source/Core/Controls/StatisticsControl.Designer.cs
+@@ -29,15 +29,25 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent() 
+ 		{
+ 			this.thingscount = new System.Windows.Forms.Label();
++			this.thingscount.AutoSize = true;
+ 			this.sectorscount = new System.Windows.Forms.Label();
++			this.sectorscount.AutoSize = true;
+ 			this.sidedefscount = new System.Windows.Forms.Label();
++			this.sidedefscount.AutoSize = true;
+ 			this.linedefscount = new System.Windows.Forms.Label();
++			this.linedefscount.AutoSize = true;
+ 			this.verticescount = new System.Windows.Forms.Label();
++			this.verticescount.AutoSize = true;
+ 			this.thingslabel = new System.Windows.Forms.Label();
++			this.thingslabel.AutoSize = true;
+ 			this.sectorslabel = new System.Windows.Forms.Label();
++			this.sectorslabel.AutoSize = true;
+ 			this.sidedefslabel = new System.Windows.Forms.Label();
++			this.sidedefslabel.AutoSize = true;
+ 			this.linedefslabel = new System.Windows.Forms.Label();
++			this.linedefslabel.AutoSize = true;
+ 			this.verticeslabel = new System.Windows.Forms.Label();
++			this.verticeslabel.AutoSize = true;
+ 			this.SuspendLayout();
+ 			// 
+ 			// thingscount
+diff --git a/Source/Core/Controls/TagSelector.Designer.cs b/Source/Core/Controls/TagSelector.Designer.cs
+index 8cdc269a1..313657574 100755
+--- a/Source/Core/Controls/TagSelector.Designer.cs
++++ b/Source/Core/Controls/TagSelector.Designer.cs
+@@ -30,6 +30,7 @@ private void InitializeComponent()
+ 		{
+ 			this.components = new System.ComponentModel.Container();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.cbTagPicker = new System.Windows.Forms.ComboBox();
+ 			this.newTag = new System.Windows.Forms.Button();
+ 			this.unusedTag = new System.Windows.Forms.Button();
+diff --git a/Source/Core/Controls/TagsSelector.Designer.cs b/Source/Core/Controls/TagsSelector.Designer.cs
+index 399e5c27d..7459798a9 100755
+--- a/Source/Core/Controls/TagsSelector.Designer.cs
++++ b/Source/Core/Controls/TagsSelector.Designer.cs
+@@ -27,6 +27,7 @@ protected override void Dispose(bool disposing) {
+ 		private void InitializeComponent() {
+ 			this.components = new System.ComponentModel.Container();
+ 			this.curtaglabel = new System.Windows.Forms.Label();
++			this.curtaglabel.AutoSize = true;
+ 			this.tagpicker = new System.Windows.Forms.ComboBox();
+ 			this.newtag = new System.Windows.Forms.Button();
+ 			this.unusedtag = new System.Windows.Forms.Button();
+@@ -37,6 +38,7 @@ private void InitializeComponent() {
+ 			this.clearalltags = new System.Windows.Forms.Button();
+ 			this.tagslist = new System.Windows.Forms.LinkLabel();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.buttons = new System.Windows.Forms.VScrollBar();
+ 			this.SuspendLayout();
+ 			// 
+diff --git a/Source/Core/Controls/ThingBrowserControl.Designer.cs b/Source/Core/Controls/ThingBrowserControl.Designer.cs
+index 92657cef0..30a56e3cc 100755
+--- a/Source/Core/Controls/ThingBrowserControl.Designer.cs
++++ b/Source/Core/Controls/ThingBrowserControl.Designer.cs
+@@ -31,18 +31,27 @@ private void InitializeComponent()
+ 			this.components = new System.ComponentModel.Container();
+ 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ThingBrowserControl));
+ 			this.sizecaption = new System.Windows.Forms.Label();
++			this.sizecaption.AutoSize = true;
+ 			this.blockingcaption = new System.Windows.Forms.Label();
++			this.blockingcaption.AutoSize = true;
+ 			this.positioncaption = new System.Windows.Forms.Label();
++			this.positioncaption.AutoSize = true;
+ 			this.typecaption = new System.Windows.Forms.Label();
++			this.typecaption.AutoSize = true;
+ 			this.sizelabel = new System.Windows.Forms.Label();
++			this.sizelabel.AutoSize = true;
+ 			this.blockinglabel = new System.Windows.Forms.Label();
++			this.blockinglabel.AutoSize = true;
+ 			this.positionlabel = new System.Windows.Forms.Label();
++			this.positionlabel.AutoSize = true;
+ 			this.thingimages = new System.Windows.Forms.ImageList(this.components);
+ 			this.infopanel = new System.Windows.Forms.Panel();
+ 			this.spritepanel = new System.Windows.Forms.Panel();
+ 			this.classname = new System.Windows.Forms.LinkLabel();
+ 			this.labelclassname = new System.Windows.Forms.Label();
++			this.labelclassname.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.tbFilter = new System.Windows.Forms.TextBox();
+ 			this.bClear = new System.Windows.Forms.Button();
+ 			this.updatetimer = new System.Windows.Forms.Timer(this.components);
+diff --git a/Source/Core/Controls/ThingInfoPanel.Designer.cs b/Source/Core/Controls/ThingInfoPanel.Designer.cs
+index b8d80dfb7..829870adc 100755
+--- a/Source/Core/Controls/ThingInfoPanel.Designer.cs
++++ b/Source/Core/Controls/ThingInfoPanel.Designer.cs
+@@ -33,27 +33,46 @@ private void InitializeComponent()
+ 			System.Windows.Forms.Label label3;
+ 			System.Windows.Forms.Label label1;
+ 			this.labelaction = new System.Windows.Forms.Label();
++			this.labelaction.AutoSize = true;
+ 			this.infopanel = new System.Windows.Forms.GroupBox();
+ 			this.anglecontrol = new CodeImp.DoomBuilder.Controls.AngleControlEx();
+ 			this.classname = new System.Windows.Forms.Label();
++			this.classname.AutoSize = true;
+ 			this.labelclass = new System.Windows.Forms.Label();
++			this.labelclass.AutoSize = true;
+ 			this.arg5 = new System.Windows.Forms.Label();
++			this.arg5.AutoSize = true;
+ 			this.arglbl5 = new System.Windows.Forms.Label();
++			this.arglbl5.AutoSize = true;
+ 			this.arglbl4 = new System.Windows.Forms.Label();
++			this.arglbl4.AutoSize = true;
+ 			this.arg4 = new System.Windows.Forms.Label();
++			this.arg4.AutoSize = true;
+ 			this.arglbl3 = new System.Windows.Forms.Label();
++			this.arglbl3.AutoSize = true;
+ 			this.arglbl2 = new System.Windows.Forms.Label();
++			this.arglbl2.AutoSize = true;
+ 			this.arg3 = new System.Windows.Forms.Label();
++			this.arg3.AutoSize = true;
+ 			this.arglbl1 = new System.Windows.Forms.Label();
++			this.arglbl1.AutoSize = true;
+ 			this.arg2 = new System.Windows.Forms.Label();
++			this.arg2.AutoSize = true;
+ 			this.arg1 = new System.Windows.Forms.Label();
++			this.arg1.AutoSize = true;
+ 			this.angle = new System.Windows.Forms.Label();
++			this.angle.AutoSize = true;
+ 			this.tag = new System.Windows.Forms.Label();
++			this.tag.AutoSize = true;
+ 			this.position = new System.Windows.Forms.Label();
++			this.position.AutoSize = true;
+ 			this.action = new System.Windows.Forms.Label();
++			this.action.AutoSize = true;
+ 			this.type = new System.Windows.Forms.Label();
++			this.type.AutoSize = true;
+ 			this.spritepanel = new System.Windows.Forms.GroupBox();
+ 			this.spritename = new System.Windows.Forms.Label();
++			this.spritename.AutoSize = true;
+ 			this.panel1 = new System.Windows.Forms.Panel();
+ 			this.spritetex = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.flagsPanel = new System.Windows.Forms.GroupBox();
+diff --git a/Source/Core/Controls/ToastControl.Designer.cs b/Source/Core/Controls/ToastControl.Designer.cs
+index 7b2a094f4..0b86fac33 100644
+--- a/Source/Core/Controls/ToastControl.Designer.cs
++++ b/Source/Core/Controls/ToastControl.Designer.cs
+@@ -30,8 +30,10 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent()
+ 		{
+ 			this.lbText = new System.Windows.Forms.Label();
++			this.lbText.AutoSize = true;
+ 			this.icon = new System.Windows.Forms.Panel();
+ 			this.lbTitle = new System.Windows.Forms.Label();
++			this.lbTitle.AutoSize = true;
+ 			this.btnClose = new System.Windows.Forms.Button();
+ 			this.SuspendLayout();
+ 			// 
+diff --git a/Source/Core/Controls/VertexInfoPanel.Designer.cs b/Source/Core/Controls/VertexInfoPanel.Designer.cs
+index 84f3a2942..2222d2d44 100755
+--- a/Source/Core/Controls/VertexInfoPanel.Designer.cs
++++ b/Source/Core/Controls/VertexInfoPanel.Designer.cs
+@@ -32,10 +32,15 @@ private void InitializeComponent()
+ 			this.vertexinfo = new System.Windows.Forms.GroupBox();
+ 			this.panelOffsets = new System.Windows.Forms.Panel();
+ 			this.zfloor = new System.Windows.Forms.Label();
++			this.zfloor.AutoSize = true;
+ 			this.labelzceiling = new System.Windows.Forms.Label();
++			this.labelzceiling.AutoSize = true;
+ 			this.zceiling = new System.Windows.Forms.Label();
++			this.zceiling.AutoSize = true;
+ 			this.labelzfloor = new System.Windows.Forms.Label();
++			this.labelzfloor.AutoSize = true;
+ 			this.position = new System.Windows.Forms.Label();
++			this.position.AutoSize = true;
+ 			label1 = new System.Windows.Forms.Label();
+ 			this.vertexinfo.SuspendLayout();
+ 			this.panelOffsets.SuspendLayout();
+diff --git a/Source/Core/Windows/AboutForm.Designer.cs b/Source/Core/Windows/AboutForm.Designer.cs
+index f39533c20..9ff068d5d 100755
+--- a/Source/Core/Windows/AboutForm.Designer.cs
++++ b/Source/Core/Windows/AboutForm.Designer.cs
+@@ -37,9 +37,11 @@ private void InitializeComponent()
+             this.tabPage1 = new System.Windows.Forms.TabPage();
+             this.panel1 = new System.Windows.Forms.Panel();
+             this.version = new System.Windows.Forms.Label();
++            this.version.AutoSize = true;
+             this.copyversion = new System.Windows.Forms.Button();
+             this.gitlink = new System.Windows.Forms.LinkLabel();
+             this.label2 = new System.Windows.Forms.Label();
++            this.label2.AutoSize = true;
+             this.zdoomorglink = new System.Windows.Forms.LinkLabel();
+             this.tabPage3 = new System.Windows.Forms.TabPage();
+             this.linkLabel4 = new System.Windows.Forms.LinkLabel();
+@@ -48,6 +50,7 @@ private void InitializeComponent()
+             this.pictureBox4 = new System.Windows.Forms.PictureBox();
+             this.builderlink = new System.Windows.Forms.LinkLabel();
+             this.label3 = new System.Windows.Forms.Label();
++            this.label3.AutoSize = true;
+             this.pictureBox6 = new System.Windows.Forms.PictureBox();
+             pictureBox5 = new System.Windows.Forms.PictureBox();
+             pictureBox3 = new System.Windows.Forms.PictureBox();
+@@ -363,4 +366,4 @@ private void InitializeComponent()
+         private System.Windows.Forms.LinkLabel linkLabel4;
+         private System.Windows.Forms.LinkLabel linkLabel3;
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ActionBrowserForm.Designer.cs b/Source/Core/Windows/ActionBrowserForm.Designer.cs
+index e1debd550..a2da77645 100755
+--- a/Source/Core/Windows/ActionBrowserForm.Designer.cs
++++ b/Source/Core/Windows/ActionBrowserForm.Designer.cs
+@@ -40,20 +40,28 @@ private void InitializeComponent()
+             this.category = new System.Windows.Forms.ComboBox();
+             this.option7 = new System.Windows.Forms.ComboBox();
+             this.option7label = new System.Windows.Forms.Label();
++            this.option7label.AutoSize = true;
+             this.option6 = new System.Windows.Forms.ComboBox();
+             this.option6label = new System.Windows.Forms.Label();
++            this.option6label.AutoSize = true;
+             this.option5 = new System.Windows.Forms.ComboBox();
+             this.option5label = new System.Windows.Forms.Label();
++            this.option5label.AutoSize = true;
+             this.option4 = new System.Windows.Forms.ComboBox();
+             this.option4label = new System.Windows.Forms.Label();
++            this.option4label.AutoSize = true;
+             this.option3 = new System.Windows.Forms.ComboBox();
+             this.option3label = new System.Windows.Forms.Label();
++            this.option3label.AutoSize = true;
+             this.option2 = new System.Windows.Forms.ComboBox();
+             this.option2label = new System.Windows.Forms.Label();
++            this.option2label.AutoSize = true;
+             this.option1 = new System.Windows.Forms.ComboBox();
+             this.option1label = new System.Windows.Forms.Label();
++            this.option1label.AutoSize = true;
+             this.option0 = new System.Windows.Forms.ComboBox();
+             this.option0label = new System.Windows.Forms.Label();
++            this.option0label.AutoSize = true;
+             this.cancel = new System.Windows.Forms.Button();
+             this.apply = new System.Windows.Forms.Button();
+             this.actions = new CodeImp.DoomBuilder.Controls.BufferedTreeView();
+@@ -63,6 +71,7 @@ private void InitializeComponent()
+             this.tbFilter = new System.Windows.Forms.TextBox();
+             this.btnClearFilter = new System.Windows.Forms.Button();
+             this.labelFilter = new System.Windows.Forms.Label();
++            this.labelFilter.AutoSize = true;
+             this.prefixespanel = new System.Windows.Forms.Panel();
+             this.tabgeneralized = new System.Windows.Forms.TabPage();
+             label1 = new System.Windows.Forms.Label();
+@@ -552,4 +561,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.TextBox tbFilter;
+ 		private System.Windows.Forms.Panel filterPanel;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/CenterOnCoordinatesForm.Designer.cs b/Source/Core/Windows/CenterOnCoordinatesForm.Designer.cs
+index c37e2971c..20027bbe1 100755
+--- a/Source/Core/Windows/CenterOnCoordinatesForm.Designer.cs
++++ b/Source/Core/Windows/CenterOnCoordinatesForm.Designer.cs
+@@ -29,7 +29,9 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent() 
+ 		{
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.accept = new System.Windows.Forms.Button();
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.gotoy = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+@@ -144,4 +146,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button accept;
+ 		private System.Windows.Forms.Button cancel;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ConfigForm.Designer.cs b/Source/Core/Windows/ConfigForm.Designer.cs
+index 5b4bd93d3..ff82247d2 100755
+--- a/Source/Core/Windows/ConfigForm.Designer.cs
++++ b/Source/Core/Windows/ConfigForm.Designer.cs
+@@ -42,6 +42,7 @@ private void InitializeComponent()
+             System.Windows.Forms.Label label10;
+             this.linuxpaths = new System.Windows.Forms.CheckBox();
+             this.labelparameters = new System.Windows.Forms.Label();
++            this.labelparameters.AutoSize = true;
+             this.cancel = new System.Windows.Forms.Button();
+             this.apply = new System.Windows.Forms.Button();
+             this.tabs = new System.Windows.Forms.TabControl();
+@@ -55,13 +56,16 @@ private void InitializeComponent()
+             this.btnNewEngine = new System.Windows.Forms.Button();
+             this.cbEngineSelector = new System.Windows.Forms.ComboBox();
+             this.label13 = new System.Windows.Forms.Label();
++            this.label13.AutoSize = true;
+             this.shortpaths = new System.Windows.Forms.CheckBox();
+             this.customparameters = new System.Windows.Forms.CheckBox();
+             this.skill = new CodeImp.DoomBuilder.Controls.ActionSelectorControl();
+             this.browsetestprogram = new System.Windows.Forms.Button();
+             this.noresultlabel = new System.Windows.Forms.Label();
++            this.noresultlabel.AutoSize = true;
+             this.testresult = new System.Windows.Forms.TextBox();
+             this.labelresult = new System.Windows.Forms.Label();
++            this.labelresult.AutoSize = true;
+             this.testparameters = new System.Windows.Forms.TextBox();
+             this.testapplication = new System.Windows.Forms.TextBox();
+             this.tabtextures = new System.Windows.Forms.TabPage();
+@@ -78,6 +82,7 @@ private void InitializeComponent()
+             this.tabmodes = new System.Windows.Forms.TabPage();
+             this.startmode = new System.Windows.Forms.ComboBox();
+             this.label11 = new System.Windows.Forms.Label();
++            this.label11.AutoSize = true;
+             this.listmodes = new System.Windows.Forms.ListView();
+             this.colmodename = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+             this.colmodeplugin = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+@@ -92,6 +97,7 @@ private void InitializeComponent()
+             this.pastecolorpresets = new System.Windows.Forms.ToolStripMenuItem();
+             this.testprogramdialog = new System.Windows.Forms.OpenFileDialog();
+             this.hintlabel = new System.Windows.Forms.Label();
++            this.hintlabel.AutoSize = true;
+             this.hint = new System.Windows.Forms.PictureBox();
+             this.tooltip = new System.Windows.Forms.ToolTip(this.components);
+             this.importtexturesetdialog = new System.Windows.Forms.OpenFileDialog();
+@@ -970,4 +976,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button exporttexturesets;
+ 		private System.Windows.Forms.SaveFileDialog exporttexturesetdialog;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/EffectBrowserForm.Designer.cs b/Source/Core/Windows/EffectBrowserForm.Designer.cs
+index 7a77fcf5b..22a28bdcd 100755
+--- a/Source/Core/Windows/EffectBrowserForm.Designer.cs
++++ b/Source/Core/Windows/EffectBrowserForm.Designer.cs
+@@ -31,20 +31,28 @@ private void InitializeComponent()
+             System.Windows.Forms.GroupBox groupBox2;
+             this.option7 = new System.Windows.Forms.ComboBox();
+             this.option7label = new System.Windows.Forms.Label();
++            this.option7label.AutoSize = true;
+             this.option6 = new System.Windows.Forms.ComboBox();
+             this.option6label = new System.Windows.Forms.Label();
++            this.option6label.AutoSize = true;
+             this.option5 = new System.Windows.Forms.ComboBox();
+             this.option5label = new System.Windows.Forms.Label();
++            this.option5label.AutoSize = true;
+             this.option4 = new System.Windows.Forms.ComboBox();
+             this.option4label = new System.Windows.Forms.Label();
++            this.option4label.AutoSize = true;
+             this.option3 = new System.Windows.Forms.ComboBox();
+             this.option3label = new System.Windows.Forms.Label();
++            this.option3label.AutoSize = true;
+             this.option2 = new System.Windows.Forms.ComboBox();
+             this.option2label = new System.Windows.Forms.Label();
++            this.option2label.AutoSize = true;
+             this.option1 = new System.Windows.Forms.ComboBox();
+             this.option1label = new System.Windows.Forms.Label();
++            this.option1label.AutoSize = true;
+             this.option0 = new System.Windows.Forms.ComboBox();
+             this.option0label = new System.Windows.Forms.Label();
++            this.option0label.AutoSize = true;
+             this.cancel = new System.Windows.Forms.Button();
+             this.apply = new System.Windows.Forms.Button();
+             this.tabs = new System.Windows.Forms.TabControl();
+@@ -53,6 +61,7 @@ private void InitializeComponent()
+             this.tbFilter = new System.Windows.Forms.TextBox();
+             this.btnClearFilter = new System.Windows.Forms.Button();
+             this.labelFilter = new System.Windows.Forms.Label();
++            this.labelFilter.AutoSize = true;
+             this.effects = new System.Windows.Forms.ListView();
+             this.colnumber = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+             this.colname = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+@@ -445,4 +454,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button btnClearFilter;
+ 		private System.Windows.Forms.Label labelFilter;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ExceptionDialog.designer.cs b/Source/Core/Windows/ExceptionDialog.designer.cs
+index a933740b1..4a8098e44 100755
+--- a/Source/Core/Windows/ExceptionDialog.designer.cs
++++ b/Source/Core/Windows/ExceptionDialog.designer.cs
+@@ -36,6 +36,7 @@ private void InitializeComponent()
+             this.newissue = new System.Windows.Forms.LinkLabel();
+             this.bToClipboard = new System.Windows.Forms.Button();
+             this.errorDescription = new System.Windows.Forms.Label();
++            this.errorDescription.AutoSize = true;
+             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+             this.SuspendLayout();
+             // 
+@@ -178,4 +179,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button bToClipboard;
+ 		private System.Windows.Forms.Label errorDescription;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/GridSetupForm.Designer.cs b/Source/Core/Windows/GridSetupForm.Designer.cs
+index 091fef962..751422ed2 100755
+--- a/Source/Core/Windows/GridSetupForm.Designer.cs
++++ b/Source/Core/Windows/GridSetupForm.Designer.cs
+@@ -37,9 +37,11 @@ private void InitializeComponent()
+ 			this.backoffsety = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.backoffsetx = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.backscale = new System.Windows.Forms.Label();
++			this.backscale.AutoSize = true;
+ 			this.selectfile = new System.Windows.Forms.Button();
+ 			this.showbackground = new System.Windows.Forms.CheckBox();
+ 			this.backoffset = new System.Windows.Forms.Label();
++			this.backoffset.AutoSize = true;
+ 			this.selectflat = new System.Windows.Forms.Button();
+ 			this.selecttexture = new System.Windows.Forms.Button();
+ 			this.backgroundimage = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+@@ -349,4 +351,4 @@ private void InitializeComponent()
+ 		private CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox backoffsetx;
+ 		private Controls.ConfigurablePictureBox backgroundimage;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/LinedefColorPresetsForm.Designer.cs b/Source/Core/Windows/LinedefColorPresetsForm.Designer.cs
+index 7ae19d9ff..20f1fa61e 100755
+--- a/Source/Core/Windows/LinedefColorPresetsForm.Designer.cs
++++ b/Source/Core/Windows/LinedefColorPresetsForm.Designer.cs
+@@ -33,6 +33,7 @@ private void InitializeComponent() {
+ 			this.addpreset = new System.Windows.Forms.Button();
+ 			this.curpresetgroup = new System.Windows.Forms.GroupBox();
+ 			this.errordescription = new System.Windows.Forms.Label();
++			this.errordescription.AutoSize = true;
+ 			this.erroricon = new System.Windows.Forms.PictureBox();
+ 			this.presetsettings = new System.Windows.Forms.TabControl();
+ 			this.tabFlags = new System.Windows.Forms.TabPage();
+@@ -44,6 +45,7 @@ private void InitializeComponent() {
+ 			this.useactivation = new System.Windows.Forms.CheckBox();
+ 			this.presetname = new System.Windows.Forms.TextBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.flags = new CodeImp.DoomBuilder.Controls.CheckboxArrayControl();
+ 			this.action = new CodeImp.DoomBuilder.Controls.ActionSelectorControl();
+ 			this.udmfactivates = new CodeImp.DoomBuilder.Controls.CheckboxArrayControl();
+@@ -403,4 +405,4 @@ private void InitializeComponent() {
+ 		private CodeImp.DoomBuilder.Controls.CheckboxArrayControl flags;
+ 		private CodeImp.DoomBuilder.Controls.CheckboxArrayControl udmfactivates;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/LinedefEditForm.Designer.cs b/Source/Core/Windows/LinedefEditForm.Designer.cs
+index 74945dfc1..cff5a029e 100755
+--- a/Source/Core/Windows/LinedefEditForm.Designer.cs
++++ b/Source/Core/Windows/LinedefEditForm.Designer.cs
+@@ -48,6 +48,7 @@ private void InitializeComponent()
+ 			this.frontside = new System.Windows.Forms.CheckBox();
+ 			this.frontgroup = new System.Windows.Forms.GroupBox();
+ 			this.labelFrontTextureOffset = new System.Windows.Forms.Label();
++			this.labelFrontTextureOffset.AutoSize = true;
+ 			this.frontsector = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.frontlow = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+ 			this.frontmid = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+@@ -55,6 +56,7 @@ private void InitializeComponent()
+ 			this.frontTextureOffset = new CodeImp.DoomBuilder.Controls.PairedIntControl();
+ 			this.backgroup = new System.Windows.Forms.GroupBox();
+ 			this.labelBackTextureOffset = new System.Windows.Forms.Label();
++			this.labelBackTextureOffset.AutoSize = true;
+ 			this.backsector = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.backlow = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+ 			this.backmid = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+@@ -627,4 +629,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Label labelBackTextureOffset;
+ 		private CodeImp.DoomBuilder.Controls.ArgumentsControl argscontrol;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/LinedefEditFormUDMF.Designer.cs b/Source/Core/Windows/LinedefEditFormUDMF.Designer.cs
+index f9985d44b..b26d3e210 100755
+--- a/Source/Core/Windows/LinedefEditFormUDMF.Designer.cs
++++ b/Source/Core/Windows/LinedefEditFormUDMF.Designer.cs
+@@ -35,8 +35,11 @@ private void InitializeComponent()
+ 			System.Windows.Forms.Label label6;
+ 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LinedefEditFormUDMF));
+ 			this.labelrenderstyle = new System.Windows.Forms.Label();
++			this.labelrenderstyle.AutoSize = true;
+ 			this.labellockpick = new System.Windows.Forms.Label();
++			this.labellockpick.AutoSize = true;
+ 			this.labelLightFront = new System.Windows.Forms.Label();
++			this.labelLightFront.AutoSize = true;
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.apply = new System.Windows.Forms.Button();
+ 			this.actiongroup = new System.Windows.Forms.GroupBox();
+@@ -65,18 +68,25 @@ private void InitializeComponent()
+ 			this.flagsFront = new CodeImp.DoomBuilder.Controls.CheckboxArrayControl();
+ 			this.frontscalegroup = new System.Windows.Forms.GroupBox();
+ 			this.labelFrontScaleBottom = new System.Windows.Forms.Label();
++			this.labelFrontScaleBottom.AutoSize = true;
+ 			this.labelFrontScaleMid = new System.Windows.Forms.Label();
++			this.labelFrontScaleMid.AutoSize = true;
+ 			this.labelFrontScaleTop = new System.Windows.Forms.Label();
++			this.labelFrontScaleTop.AutoSize = true;
+ 			this.pfcFrontScaleTop = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.pfcFrontScaleBottom = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.pfcFrontScaleMid = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.groupBox6 = new System.Windows.Forms.GroupBox();
+ 			this.labelFrontTextureOffset = new System.Windows.Forms.Label();
++			this.labelFrontTextureOffset.AutoSize = true;
+ 			this.labelFrontOffsetBottom = new System.Windows.Forms.Label();
++			this.labelFrontOffsetBottom.AutoSize = true;
+ 			this.frontTextureOffset = new CodeImp.DoomBuilder.Controls.PairedIntControl();
+ 			this.labelFrontOffsetMid = new System.Windows.Forms.Label();
++			this.labelFrontOffsetMid.AutoSize = true;
+ 			this.pfcFrontOffsetTop = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.labelFrontOffsetTop = new System.Windows.Forms.Label();
++			this.labelFrontOffsetTop.AutoSize = true;
+ 			this.pfcFrontOffsetMid = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.pfcFrontOffsetBottom = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.groupBox5 = new System.Windows.Forms.GroupBox();
+@@ -103,21 +113,29 @@ private void InitializeComponent()
+ 			this.custombackbutton = new System.Windows.Forms.Button();
+ 			this.lightBack = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.labelLightBack = new System.Windows.Forms.Label();
++			this.labelLightBack.AutoSize = true;
+ 			this.cbLightAbsoluteBack = new System.Windows.Forms.CheckBox();
+ 			this.backflagsgroup = new System.Windows.Forms.GroupBox();
+ 			this.flagsBack = new CodeImp.DoomBuilder.Controls.CheckboxArrayControl();
+ 			this.backscalegroup = new System.Windows.Forms.GroupBox();
+ 			this.labelBackScaleBottom = new System.Windows.Forms.Label();
++			this.labelBackScaleBottom.AutoSize = true;
+ 			this.labelBackScaleMid = new System.Windows.Forms.Label();
++			this.labelBackScaleMid.AutoSize = true;
+ 			this.labelBackScaleTop = new System.Windows.Forms.Label();
++			this.labelBackScaleTop.AutoSize = true;
+ 			this.pfcBackScaleTop = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.pfcBackScaleBottom = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.pfcBackScaleMid = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.labelBackTextureOffset = new System.Windows.Forms.Label();
++			this.labelBackTextureOffset.AutoSize = true;
+ 			this.labelBackOffsetBottom = new System.Windows.Forms.Label();
++			this.labelBackOffsetBottom.AutoSize = true;
+ 			this.labelBackOffsetMid = new System.Windows.Forms.Label();
++			this.labelBackOffsetMid.AutoSize = true;
+ 			this.labelBackOffsetTop = new System.Windows.Forms.Label();
++			this.labelBackOffsetTop.AutoSize = true;
+ 			this.pfcBackOffsetTop = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.pfcBackOffsetMid = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+ 			this.pfcBackOffsetBottom = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+@@ -1619,4 +1637,4 @@ private void InitializeComponent()
+ 		private Controls.SidedefPartLightControl lightbackmiddle;
+ 		private Controls.SidedefPartLightControl lightbackupper;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/MainForm.Designer.cs b/Source/Core/Windows/MainForm.Designer.cs
+index 8da269deb..6c79e8ac7 100755
+--- a/Source/Core/Windows/MainForm.Designer.cs
++++ b/Source/Core/Windows/MainForm.Designer.cs
+@@ -268,7 +268,9 @@ private void InitializeComponent()
+ 			this.statistics = new CodeImp.DoomBuilder.Controls.StatisticsControl();
+ 			this.heightpanel1 = new System.Windows.Forms.Panel();
+ 			this.labelcollapsedinfo = new System.Windows.Forms.Label();
++			this.labelcollapsedinfo.AutoSize = true;
+ 			this.modename = new System.Windows.Forms.Label();
++			this.modename.AutoSize = true;
+ 			this.buttontoggleinfo = new System.Windows.Forms.Button();
+ 			this.console = new CodeImp.DoomBuilder.DebugConsole();
+ 			this.vertexinfo = new CodeImp.DoomBuilder.Controls.VertexInfoPanel();
+@@ -3151,4 +3153,4 @@ private void InitializeComponent()
+ 		private ToolStripMenuItem itemtogglefixedthingsscale;
+ 		private ToolStripMenuItem itemtogglealwaysshowvertices;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/MapOptionsForm.Designer.cs b/Source/Core/Windows/MapOptionsForm.Designer.cs
+index 4f96a7038..b7c9ce712 100755
+--- a/Source/Core/Windows/MapOptionsForm.Designer.cs
++++ b/Source/Core/Windows/MapOptionsForm.Designer.cs
+@@ -36,8 +36,10 @@ private void InitializeComponent()
+             System.Windows.Forms.Label label4;
+             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MapOptionsForm));
+             this.examplelabel = new System.Windows.Forms.Label();
++            this.examplelabel.AutoSize = true;
+             this.scriptcompiler = new System.Windows.Forms.ComboBox();
+             this.scriptcompilerlabel = new System.Windows.Forms.Label();
++            this.scriptcompilerlabel.AutoSize = true;
+             this.levelname = new System.Windows.Forms.TextBox();
+             this.config = new System.Windows.Forms.ComboBox();
+             this.apply = new System.Windows.Forms.Button();
+@@ -48,6 +50,7 @@ private void InitializeComponent()
+             this.datalocations = new CodeImp.DoomBuilder.Controls.ResourceListEditor();
+             this.tooltip = new System.Windows.Forms.ToolTip(this.components);
+             this.label5 = new System.Windows.Forms.Label();
++            this.label5.AutoSize = true;
+             this.prepostcommands = new System.Windows.Forms.Button();
+             label3 = new System.Windows.Forms.Label();
+             label2 = new System.Windows.Forms.Label();
+@@ -308,4 +311,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Label label5;
+ 		private System.Windows.Forms.Button prepostcommands;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/OpenMapOptionsForm.Designer.cs b/Source/Core/Windows/OpenMapOptionsForm.Designer.cs
+index 1b966845a..53cf6c853 100755
+--- a/Source/Core/Windows/OpenMapOptionsForm.Designer.cs
++++ b/Source/Core/Windows/OpenMapOptionsForm.Designer.cs
+@@ -44,6 +44,7 @@ private void InitializeComponent()
+             this.mapslist = new System.Windows.Forms.ListView();
+             this.scriptcompiler = new System.Windows.Forms.ComboBox();
+             this.scriptcompilerlabel = new System.Windows.Forms.Label();
++            this.scriptcompilerlabel.AutoSize = true;
+             this.tooltip = new System.Windows.Forms.ToolTip(this.components);
+             columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+             label1 = new System.Windows.Forms.Label();
+@@ -59,6 +60,7 @@ private void InitializeComponent()
+             // 
+             // label1
+             // 
++            label1.AutoSize = true;
+             label1.Location = new System.Drawing.Point(15, 24);
+             label1.Name = "label1";
+             label1.Size = new System.Drawing.Size(120, 14);
+@@ -264,4 +266,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox longtexturenames;
+ 		private System.Windows.Forms.ToolTip tooltip;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/PreAndPostCommandsForm.Designer.cs b/Source/Core/Windows/PreAndPostCommandsForm.Designer.cs
+index 514e62594..afbef4d94 100644
+--- a/Source/Core/Windows/PreAndPostCommandsForm.Designer.cs
++++ b/Source/Core/Windows/PreAndPostCommandsForm.Designer.cs
+@@ -33,12 +33,14 @@ private void InitializeComponent()
+ 			this.tabControl1 = new System.Windows.Forms.TabControl();
+ 			this.tabPage1 = new System.Windows.Forms.TabPage();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.reloadpost = new CodeImp.DoomBuilder.Controls.ExternalCommandControl();
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.reloadpre = new CodeImp.DoomBuilder.Controls.ExternalCommandControl();
+ 			this.tabPage2 = new System.Windows.Forms.TabPage();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+ 			this.testpost = new CodeImp.DoomBuilder.Controls.ExternalCommandControl();
+ 			this.groupBox4 = new System.Windows.Forms.GroupBox();
+@@ -245,4 +247,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Label label2;
+ 		private System.Windows.Forms.Label label1;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/PreferencesForm.Designer.cs b/Source/Core/Windows/PreferencesForm.Designer.cs
+index 6f498788b..797e5717c 100755
+--- a/Source/Core/Windows/PreferencesForm.Designer.cs
++++ b/Source/Core/Windows/PreferencesForm.Designer.cs
+@@ -46,30 +46,43 @@ private void InitializeComponent()
+ 			this.locatetexturegroup = new System.Windows.Forms.CheckBox();
+ 			this.recentFiles = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.labelRecentFiles = new System.Windows.Forms.Label();
++			this.labelRecentFiles.AutoSize = true;
+ 			this.label25 = new System.Windows.Forms.Label();
++			this.label25.AutoSize = true;
+ 			this.vertexScaleLabel = new System.Windows.Forms.Label();
++			this.vertexScaleLabel.AutoSize = true;
+ 			this.label22 = new System.Windows.Forms.Label();
++			this.label22.AutoSize = true;
+ 			this.vertexScale = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.cbSynchCameras = new System.Windows.Forms.CheckBox();
+ 			this.showtexturesizes = new System.Windows.Forms.CheckBox();
+ 			this.scriptontop = new System.Windows.Forms.CheckBox();
+ 			this.zoomfactor = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.zoomfactorlabel = new System.Windows.Forms.Label();
++			this.zoomfactorlabel.AutoSize = true;
+ 			this.label19 = new System.Windows.Forms.Label();
++			this.label19.AutoSize = true;
+ 			this.autoscrollspeed = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.autoscrollspeedlabel = new System.Windows.Forms.Label();
++			this.autoscrollspeedlabel.AutoSize = true;
+ 			this.label15 = new System.Windows.Forms.Label();
++			this.label15.AutoSize = true;
+ 			this.label14 = new System.Windows.Forms.Label();
++			this.label14.AutoSize = true;
+ 			this.defaultviewmode = new System.Windows.Forms.ComboBox();
+ 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+ 			this.resetscreenshotsdir = new System.Windows.Forms.Button();
+ 			this.browsescreenshotsdir = new System.Windows.Forms.Button();
+ 			this.label26 = new System.Windows.Forms.Label();
++			this.label26.AutoSize = true;
+ 			this.label31 = new System.Windows.Forms.Label();
++			this.label31.AutoSize = true;
+ 			this.cbMarkExtraFloors = new System.Windows.Forms.CheckBox();
+ 			this.cbFlatShadeVertices = new System.Windows.Forms.CheckBox();
+ 			this.label32 = new System.Windows.Forms.Label();
++			this.label32.AutoSize = true;
+ 			this.label30 = new System.Windows.Forms.Label();
++			this.label30.AutoSize = true;
+ 			this.cbOldHighlightMode = new System.Windows.Forms.CheckBox();
+ 			this.cbStretchView = new System.Windows.Forms.CheckBox();
+ 			this.scriptautoclosebrackets = new System.Windows.Forms.CheckBox();
+@@ -83,9 +96,11 @@ private void InitializeComponent()
+ 			this.tabinterface = new System.Windows.Forms.TabPage();
+ 			this.groupBox11 = new System.Windows.Forms.GroupBox();
+ 			this.label28 = new System.Windows.Forms.Label();
++			this.label28.AutoSize = true;
+ 			this.textlabelfontname = new System.Windows.Forms.ComboBox();
+ 			this.textlabelfontbold = new System.Windows.Forms.CheckBox();
+ 			this.label33 = new System.Windows.Forms.Label();
++			this.label33.AutoSize = true;
+ 			this.textlabelfontsize = new System.Windows.Forms.ComboBox();
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+ 			this.screenshotsfolderpath = new System.Windows.Forms.TextBox();
+@@ -104,26 +119,37 @@ private void InitializeComponent()
+ 			this.collapsedockers = new System.Windows.Forms.CheckBox();
+ 			this.dockersposition = new System.Windows.Forms.ComboBox();
+ 			this.label17 = new System.Windows.Forms.Label();
++			this.label17.AutoSize = true;
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.vertexScale3D = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.vertexScale3DLabel = new System.Windows.Forms.Label();
++			this.vertexScale3DLabel.AutoSize = true;
+ 			this.viewdistance = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.movespeed = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.mousespeed = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.fieldofview = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.viewdistancelabel = new System.Windows.Forms.Label();
++			this.viewdistancelabel.AutoSize = true;
+ 			this.label13 = new System.Windows.Forms.Label();
++			this.label13.AutoSize = true;
+ 			this.invertyaxis = new System.Windows.Forms.CheckBox();
+ 			this.movespeedlabel = new System.Windows.Forms.Label();
++			this.movespeedlabel.AutoSize = true;
+ 			this.label11 = new System.Windows.Forms.Label();
++			this.label11.AutoSize = true;
+ 			this.mousespeedlabel = new System.Windows.Forms.Label();
++			this.mousespeedlabel.AutoSize = true;
+ 			this.label9 = new System.Windows.Forms.Label();
++			this.label9.AutoSize = true;
+ 			this.fieldofviewlabel = new System.Windows.Forms.Label();
++			this.fieldofviewlabel.AutoSize = true;
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.tabkeys = new System.Windows.Forms.TabPage();
+ 			this.bClearActionFilter = new System.Windows.Forms.Button();
+ 			this.tbFilterActions = new System.Windows.Forms.TextBox();
+ 			this.label24 = new System.Windows.Forms.Label();
++			this.label24.AutoSize = true;
+ 			this.listactions = new System.Windows.Forms.ListView();
+ 			this.columncontrolaction = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+ 			this.columncontrolkey = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+@@ -131,26 +157,37 @@ private void InitializeComponent()
+ 			this.actiondescription = new System.Windows.Forms.TextBox();
+ 			this.keyusedlist = new System.Windows.Forms.ListBox();
+ 			this.keyusedlabel = new System.Windows.Forms.Label();
++			this.keyusedlabel.AutoSize = true;
+ 			this.disregardshiftlabel = new System.Windows.Forms.Label();
++			this.disregardshiftlabel.AutoSize = true;
+ 			this.actioncontrol = new System.Windows.Forms.ComboBox();
+ 			this.actiontitle = new System.Windows.Forms.Label();
++			this.actiontitle.AutoSize = true;
+ 			this.actioncontrolclear = new System.Windows.Forms.Button();
+ 			this.actionkey = new System.Windows.Forms.TextBox();
+ 			this.tabcolors = new System.Windows.Forms.TabPage();
+ 			this.appearancegroup1 = new System.Windows.Forms.GroupBox();
+ 			this.activethingsalphalabel = new System.Windows.Forms.Label();
++			this.activethingsalphalabel.AutoSize = true;
+ 			this.activethingsalpha = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.hiddenthingsalphalabel = new System.Windows.Forms.Label();
++			this.hiddenthingsalphalabel.AutoSize = true;
+ 			this.inactivethingsalphalabel = new System.Windows.Forms.Label();
++			this.inactivethingsalphalabel.AutoSize = true;
+ 			this.labelantialiasing = new System.Windows.Forms.Label();
++			this.labelantialiasing.AutoSize = true;
+ 			this.antialiasing = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.labelanisotropicfiltering = new System.Windows.Forms.Label();
++			this.labelanisotropicfiltering.AutoSize = true;
+ 			this.anisotropicfiltering = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.cbShowFPS = new System.Windows.Forms.CheckBox();
+ 			this.doublesidedalphalabel = new System.Windows.Forms.Label();
++			this.doublesidedalphalabel.AutoSize = true;
+ 			this.qualitydisplay = new System.Windows.Forms.CheckBox();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.labelDynLightCount = new System.Windows.Forms.Label();
++			this.labelDynLightCount.AutoSize = true;
+ 			this.tbDynLightCount = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.imagebrightness = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.animatevisualselection = new System.Windows.Forms.CheckBox();
+@@ -160,6 +197,7 @@ private void InitializeComponent()
+ 			this.visualbilinear = new System.Windows.Forms.CheckBox();
+ 			this.classicbilinear = new System.Windows.Forms.CheckBox();
+ 			this.imagebrightnesslabel = new System.Windows.Forms.Label();
++			this.imagebrightnesslabel.AutoSize = true;
+ 			this.colorsgroup1 = new System.Windows.Forms.GroupBox();
+ 			this.colorguidelines = new CodeImp.DoomBuilder.Controls.ColorControl();
+ 			this.color3dFloors = new CodeImp.DoomBuilder.Controls.ColorControl();
+@@ -181,17 +219,21 @@ private void InitializeComponent()
+ 			this.scriptautoshowautocompletion = new System.Windows.Forms.CheckBox();
+ 			this.scriptusetabs = new System.Windows.Forms.CheckBox();
+ 			this.label10 = new System.Windows.Forms.Label();
++			this.label10.AutoSize = true;
+ 			this.scriptautoindent = new System.Windows.Forms.CheckBox();
+ 			this.scripttabwidth = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.groupBox7 = new System.Windows.Forms.GroupBox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.scriptfontname = new System.Windows.Forms.ComboBox();
+ 			this.scriptfontbold = new System.Windows.Forms.CheckBox();
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.scriptfontsize = new System.Windows.Forms.ComboBox();
+ 			this.groupBox6 = new System.Windows.Forms.GroupBox();
+ 			this.colorproperties = new CodeImp.DoomBuilder.Controls.ColorControl();
+ 			this.label23 = new System.Windows.Forms.Label();
++			this.label23.AutoSize = true;
+ 			this.scriptcolorpresets = new System.Windows.Forms.ComboBox();
+ 			this.colorfoldback = new CodeImp.DoomBuilder.Controls.ColorControl();
+ 			this.colorfoldfore = new CodeImp.DoomBuilder.Controls.ColorControl();
+@@ -214,18 +256,24 @@ private void InitializeComponent()
+ 			this.scriptedit = new CodeImp.DoomBuilder.Controls.ScriptEditorPreviewControl();
+ 			this.tabpasting = new System.Windows.Forms.TabPage();
+ 			this.label16 = new System.Windows.Forms.Label();
++			this.label16.AutoSize = true;
+ 			this.pasteoptions = new CodeImp.DoomBuilder.Controls.PasteOptionsControl();
+ 			this.tabrecovery = new System.Windows.Forms.TabPage();
+ 			this.autosavegroupbox = new System.Windows.Forms.GroupBox();
+ 			this.autosavedisabledwarning = new System.Windows.Forms.Panel();
+ 			this.label34 = new System.Windows.Forms.Label();
++			this.label34.AutoSize = true;
+ 			this.pictureBox1 = new System.Windows.Forms.PictureBox();
+ 			this.autosavecountlabel = new System.Windows.Forms.Label();
++			this.autosavecountlabel.AutoSize = true;
+ 			this.autosavecount = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.label21 = new System.Windows.Forms.Label();
++			this.label21.AutoSize = true;
+ 			this.autosaveintervallabel = new System.Windows.Forms.Label();
++			this.autosaveintervallabel.AutoSize = true;
+ 			this.autosaveinterval = new CodeImp.DoomBuilder.Controls.TransparentTrackBar();
+ 			this.label20 = new System.Windows.Forms.Label();
++			this.label20.AutoSize = true;
+ 			this.autosave = new System.Windows.Forms.CheckBox();
+ 			this.tabtoasts = new System.Windows.Forms.TabPage();
+ 			this.groupBox10 = new System.Windows.Forms.GroupBox();
+@@ -234,9 +282,11 @@ private void InitializeComponent()
+ 			this.description = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+ 			this.tbToastDuration = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label12 = new System.Windows.Forms.Label();
++			this.label12.AutoSize = true;
+ 			this.cbToastsEnabled = new System.Windows.Forms.CheckBox();
+ 			this.gbToastPosition = new System.Windows.Forms.GroupBox();
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.rbToastPosBR = new System.Windows.Forms.RadioButton();
+ 			this.rbToastPosBL = new System.Windows.Forms.RadioButton();
+ 			this.rbToastPosTR = new System.Windows.Forms.RadioButton();
+@@ -3051,4 +3101,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Label label34;
+ 		private System.Windows.Forms.PictureBox pictureBox1;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ResourceOptionsForm.Designer.cs b/Source/Core/Windows/ResourceOptionsForm.Designer.cs
+index 4cc53286b..749aa0962 100755
+--- a/Source/Core/Windows/ResourceOptionsForm.Designer.cs
++++ b/Source/Core/Windows/ResourceOptionsForm.Designer.cs
+@@ -35,6 +35,7 @@ private void InitializeComponent()
+ 			this.tabs = new System.Windows.Forms.TabControl();
+ 			this.wadfiletab = new System.Windows.Forms.TabPage();
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.strictpatches = new System.Windows.Forms.CheckBox();
+ 			this.browsewad = new System.Windows.Forms.Button();
+ 			this.wadlocation = new System.Windows.Forms.TextBox();
+@@ -58,6 +59,7 @@ private void InitializeComponent()
+ 			this.checkingloader = new System.Windows.Forms.Panel();
+ 			this.pictureBox1 = new System.Windows.Forms.PictureBox();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			label1 = new System.Windows.Forms.Label();
+ 			label2 = new System.Windows.Forms.Label();
+ 			label3 = new System.Windows.Forms.Label();
+@@ -464,4 +466,4 @@ private void InitializeComponent()
+         private System.Windows.Forms.LinkLabel pkelink;
+         private System.Windows.Forms.LinkLabel pke_directorylink;
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ScriptFindReplaceForm.Designer.cs b/Source/Core/Windows/ScriptFindReplaceForm.Designer.cs
+index e6a9cc51d..917ee81a6 100755
+--- a/Source/Core/Windows/ScriptFindReplaceForm.Designer.cs
++++ b/Source/Core/Windows/ScriptFindReplaceForm.Designer.cs
+@@ -31,6 +31,7 @@ private void InitializeComponent()
+ 			this.components = new System.ComponentModel.Container();
+ 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScriptFindReplaceForm));
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.findmatchcase = new System.Windows.Forms.CheckBox();
+ 			this.findwholeword = new System.Windows.Forms.CheckBox();
+ 			this.findnextbutton = new System.Windows.Forms.Button();
+@@ -42,14 +43,18 @@ private void InitializeComponent()
+ 			this.bookmarkallbutton = new System.Windows.Forms.Button();
+ 			this.findinbox = new System.Windows.Forms.ComboBox();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.findbox = new System.Windows.Forms.ComboBox();
+ 			this.tabreplace = new System.Windows.Forms.TabPage();
+ 			this.replacebox = new System.Windows.Forms.ComboBox();
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.replaceinbox = new System.Windows.Forms.ComboBox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.replacefindbox = new System.Windows.Forms.ComboBox();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.replacematchcase = new System.Windows.Forms.CheckBox();
+ 			this.replacewholeword = new System.Windows.Forms.CheckBox();
+ 			this.imagelist = new System.Windows.Forms.ImageList(this.components);
+@@ -379,4 +384,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox replacewholeword;
+ 		private System.Windows.Forms.Button bookmarkallbutton;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ScriptGoToLineForm.Designer.cs b/Source/Core/Windows/ScriptGoToLineForm.Designer.cs
+index 13427cde3..c74fe0a41 100755
+--- a/Source/Core/Windows/ScriptGoToLineForm.Designer.cs
++++ b/Source/Core/Windows/ScriptGoToLineForm.Designer.cs
+@@ -29,6 +29,7 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent()
+ 		{
+ 			this.label = new System.Windows.Forms.Label();
++			this.label.AutoSize = true;
+ 			this.linenumber = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.panel1 = new System.Windows.Forms.Panel();
+ 			this.cancel = new System.Windows.Forms.Button();
+@@ -129,4 +130,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button cancel;
+ 		private System.Windows.Forms.Button accept;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/SectorEditForm.Designer.cs b/Source/Core/Windows/SectorEditForm.Designer.cs
+index 3629b7183..a8a02fe5d 100755
+--- a/Source/Core/Windows/SectorEditForm.Designer.cs
++++ b/Source/Core/Windows/SectorEditForm.Designer.cs
+@@ -47,7 +47,9 @@ private void InitializeComponent()
+             this.brightness = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+             this.ceilingheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+             this.sectorheightlabel = new System.Windows.Forms.Label();
++            this.sectorheightlabel.AutoSize = true;
+             this.sectorheight = new System.Windows.Forms.Label();
++            this.sectorheight.AutoSize = true;
+             this.floortex = new CodeImp.DoomBuilder.Controls.FlatSelectorControl();
+             this.floorheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+             this.ceilingtex = new CodeImp.DoomBuilder.Controls.FlatSelectorControl();
+@@ -428,4 +430,4 @@ private void InitializeComponent()
+ 		private CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox heightoffset;
+ 		private System.Windows.Forms.ToolTip tooltip;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/SectorEditFormUDMF.Designer.cs b/Source/Core/Windows/SectorEditFormUDMF.Designer.cs
+index bed256875..3c9ae3ad6 100755
+--- a/Source/Core/Windows/SectorEditFormUDMF.Designer.cs
++++ b/Source/Core/Windows/SectorEditFormUDMF.Designer.cs
+@@ -57,7 +57,9 @@ private void InitializeComponent()
+ 			this.heightoffset = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.ceilingheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.sectorheightlabel = new System.Windows.Forms.Label();
++			this.sectorheightlabel.AutoSize = true;
+ 			this.sectorheight = new System.Windows.Forms.Label();
++			this.sectorheight.AutoSize = true;
+ 			this.floorheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.tabs = new System.Windows.Forms.TabControl();
+ 			this.tabproperties = new System.Windows.Forms.TabPage();
+@@ -75,6 +77,7 @@ private void InitializeComponent()
+ 			this.floorglowheightrequired = new System.Windows.Forms.PictureBox();
+ 			this.resetfloorglowheight = new System.Windows.Forms.Button();
+ 			this.floorglowheightlabel = new System.Windows.Forms.Label();
++			this.floorglowheightlabel.AutoSize = true;
+ 			this.floorglowheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.floorglowcolor = new CodeImp.DoomBuilder.Controls.ColorFieldsControl();
+ 			this.groupBox10 = new System.Windows.Forms.GroupBox();
+@@ -82,6 +85,7 @@ private void InitializeComponent()
+ 			this.ceilingglowheightrequired = new System.Windows.Forms.PictureBox();
+ 			this.resetceilingglowheight = new System.Windows.Forms.Button();
+ 			this.ceilingglowheightlabel = new System.Windows.Forms.Label();
++			this.ceilingglowheightlabel.AutoSize = true;
+ 			this.ceilingglowheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.ceilingglowcolor = new CodeImp.DoomBuilder.Controls.ColorFieldsControl();
+ 			this.groupBox9 = new System.Windows.Forms.GroupBox();
+@@ -98,20 +102,27 @@ private void InitializeComponent()
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.reset_floor_reflect = new System.Windows.Forms.Button();
+ 			this.label23 = new System.Windows.Forms.Label();
++			this.label23.AutoSize = true;
+ 			this.floor_reflect = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.resetfloorterrain = new System.Windows.Forms.Button();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.floorterrain = new System.Windows.Forms.ComboBox();
+ 			this.resetfloorlight = new System.Windows.Forms.Button();
+ 			this.labelFloorOffsets = new System.Windows.Forms.Label();
++			this.labelFloorOffsets.AutoSize = true;
+ 			this.labelFloorScale = new System.Windows.Forms.Label();
++			this.labelFloorScale.AutoSize = true;
+ 			this.cbUseFloorLineAngles = new System.Windows.Forms.CheckBox();
+ 			this.floorAngleControl = new CodeImp.DoomBuilder.Controls.AngleControlEx();
+ 			this.labelfloorrenderstyle = new System.Windows.Forms.Label();
++			this.labelfloorrenderstyle.AutoSize = true;
+ 			this.label11 = new System.Windows.Forms.Label();
++			this.label11.AutoSize = true;
+ 			this.floorRotation = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.floorLightAbsolute = new System.Windows.Forms.CheckBox();
+ 			this.label12 = new System.Windows.Forms.Label();
++			this.label12.AutoSize = true;
+ 			this.floorBrightness = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.floorRenderStyle = new System.Windows.Forms.ComboBox();
+ 			this.floorScale = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+@@ -120,20 +131,27 @@ private void InitializeComponent()
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.reset_ceiling_reflect = new System.Windows.Forms.Button();
+ 			this.label20 = new System.Windows.Forms.Label();
++			this.label20.AutoSize = true;
+ 			this.ceiling_reflect = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.resetceilterrain = new System.Windows.Forms.Button();
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.ceilterrain = new System.Windows.Forms.ComboBox();
+ 			this.resetceillight = new System.Windows.Forms.Button();
+ 			this.labelCeilOffsets = new System.Windows.Forms.Label();
++			this.labelCeilOffsets.AutoSize = true;
+ 			this.labelCeilScale = new System.Windows.Forms.Label();
++			this.labelCeilScale.AutoSize = true;
+ 			this.cbUseCeilLineAngles = new System.Windows.Forms.CheckBox();
+ 			this.ceilAngleControl = new CodeImp.DoomBuilder.Controls.AngleControlEx();
+ 			this.labelceilrenderstyle = new System.Windows.Forms.Label();
++			this.labelceilrenderstyle.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.ceilRotation = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.ceilLightAbsolute = new System.Windows.Forms.CheckBox();
+ 			this.labelLightFront = new System.Windows.Forms.Label();
++			this.labelLightFront.AutoSize = true;
+ 			this.ceilBrightness = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.ceilRenderStyle = new System.Windows.Forms.ComboBox();
+ 			this.ceilScale = new CodeImp.DoomBuilder.Controls.PairedFieldsControl();
+@@ -144,15 +162,19 @@ private void InitializeComponent()
+ 			this.resetalphafloor = new System.Windows.Forms.Button();
+ 			this.floorportalflags = new CodeImp.DoomBuilder.Controls.CheckboxArrayControl();
+ 			this.label22 = new System.Windows.Forms.Label();
++			this.label22.AutoSize = true;
+ 			this.alphafloor = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.floorportalrenderstylelabel = new System.Windows.Forms.Label();
++			this.floorportalrenderstylelabel.AutoSize = true;
+ 			this.floorportalrenderstyle = new System.Windows.Forms.ComboBox();
+ 			this.groupBox6 = new System.Windows.Forms.GroupBox();
+ 			this.resetalphaceiling = new System.Windows.Forms.Button();
+ 			this.ceilportalflags = new CodeImp.DoomBuilder.Controls.CheckboxArrayControl();
+ 			this.label21 = new System.Windows.Forms.Label();
++			this.label21.AutoSize = true;
+ 			this.alphaceiling = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.ceilportalrenderstylelabel = new System.Windows.Forms.Label();
++			this.ceilportalrenderstylelabel.AutoSize = true;
+ 			this.ceilportalrenderstyle = new System.Windows.Forms.ComboBox();
+ 			this.gbFloorSlope = new System.Windows.Forms.GroupBox();
+ 			this.floorslopecontrol = new CodeImp.DoomBuilder.Controls.SectorSlopeControl();
+@@ -2202,4 +2224,4 @@ private void InitializeComponent()
+         private System.Windows.Forms.CheckBox floorGlowEnabled;
+         private Controls.ButtonsNumericTextbox desaturation;
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/TextureSetForm.Designer.cs b/Source/Core/Windows/TextureSetForm.Designer.cs
+index 748b648fe..93b53d2a9 100755
+--- a/Source/Core/Windows/TextureSetForm.Designer.cs
++++ b/Source/Core/Windows/TextureSetForm.Designer.cs
+@@ -33,8 +33,11 @@ private void InitializeComponent()
+             this.filters = new System.Windows.Forms.ListView();
+             this.filtercolumn = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+             this.label2 = new System.Windows.Forms.Label();
++            this.label2.AutoSize = true;
+             this.label3 = new System.Windows.Forms.Label();
++            this.label3.AutoSize = true;
+             this.label4 = new System.Windows.Forms.Label();
++            this.label4.AutoSize = true;
+             this.apply = new System.Windows.Forms.Button();
+             this.cancel = new System.Windows.Forms.Button();
+             this.addfilter = new System.Windows.Forms.Button();
+@@ -46,6 +49,7 @@ private void InitializeComponent()
+             this.matchesbutton = new System.Windows.Forms.RadioButton();
+             this.matcheslist = new CodeImp.DoomBuilder.Controls.ImageBrowserControl();
+             this.noresultlabel = new System.Windows.Forms.Label();
++            this.noresultlabel.AutoSize = true;
+             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+             this.groupBox3 = new System.Windows.Forms.GroupBox();
+             this.groupBox1.SuspendLayout();
+@@ -323,4 +327,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.PictureBox pictureBox1;
+ 		private System.Windows.Forms.GroupBox groupBox3;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ThingEditForm.Designer.cs b/Source/Core/Windows/ThingEditForm.Designer.cs
+index 6dbec17f3..f1a7403c4 100755
+--- a/Source/Core/Windows/ThingEditForm.Designer.cs
++++ b/Source/Core/Windows/ThingEditForm.Designer.cs
+@@ -33,11 +33,14 @@ private void InitializeComponent()
+             System.Windows.Forms.Label label7;
+             this.cbAbsoluteHeight = new System.Windows.Forms.CheckBox();
+             this.label2 = new System.Windows.Forms.Label();
++            this.label2.AutoSize = true;
+             this.label1 = new System.Windows.Forms.Label();
++            this.label1.AutoSize = true;
+             this.posX = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+             this.posY = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+             this.posZ = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+             this.zlabel = new System.Windows.Forms.Label();
++            this.zlabel.AutoSize = true;
+             this.typegroup = new System.Windows.Forms.GroupBox();
+             this.thingtype = new CodeImp.DoomBuilder.Controls.ThingBrowserControl();
+             this.anglecontrol = new CodeImp.DoomBuilder.Controls.AngleControlEx();
+@@ -58,6 +61,7 @@ private void InitializeComponent()
+             this.apply = new System.Windows.Forms.Button();
+             this.hint = new System.Windows.Forms.PictureBox();
+             this.hintlabel = new System.Windows.Forms.Label();
++            this.hintlabel.AutoSize = true;
+             this.tooltip = new System.Windows.Forms.ToolTip(this.components);
+             this.panel = new System.Windows.Forms.Panel();
+             this.applypanel = new System.Windows.Forms.Panel();
+@@ -515,4 +519,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Panel applypanel;
+ 		private CodeImp.DoomBuilder.Controls.ArgumentsControl argscontrol;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ThingEditFormUDMF.Designer.cs b/Source/Core/Windows/ThingEditFormUDMF.Designer.cs
+index 97bb3a5bb..e9f9e3dad 100755
+--- a/Source/Core/Windows/ThingEditFormUDMF.Designer.cs
++++ b/Source/Core/Windows/ThingEditFormUDMF.Designer.cs
+@@ -37,13 +37,18 @@ private void InitializeComponent()
+ 			this.cbrandomangle = new System.Windows.Forms.CheckBox();
+ 			this.roll = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.labelroll = new System.Windows.Forms.Label();
++			this.labelroll.AutoSize = true;
+ 			this.pitch = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.labelpitch = new System.Windows.Forms.Label();
++			this.labelpitch.AutoSize = true;
+ 			this.angle = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.labelAngle = new System.Windows.Forms.Label();
++			this.labelAngle.AutoSize = true;
+ 			this.anglecontrol = new CodeImp.DoomBuilder.Controls.AngleControlEx();
+ 			this.labelGravity = new System.Windows.Forms.Label();
++			this.labelGravity.AutoSize = true;
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.tabs = new System.Windows.Forms.TabControl();
+ 			this.tabproperties = new System.Windows.Forms.TabPage();
+ 			this.settingsgroup = new System.Windows.Forms.GroupBox();
+@@ -57,31 +62,41 @@ private void InitializeComponent()
+ 			this.groupBox4 = new System.Windows.Forms.GroupBox();
+ 			this.cbAbsoluteHeight = new System.Windows.Forms.CheckBox();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.posX = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.posY = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.posZ = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.zlabel = new System.Windows.Forms.Label();
++			this.zlabel.AutoSize = true;
+ 			this.tabeffects = new System.Windows.Forms.TabPage();
+ 			this.groupbehaviour = new System.Windows.Forms.GroupBox();
+ 			this.floatbobphase = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.conversationID = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.labelID = new System.Windows.Forms.Label();
++			this.labelID.AutoSize = true;
+ 			this.health = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label10 = new System.Windows.Forms.Label();
++			this.label10.AutoSize = true;
+ 			this.score = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label9 = new System.Windows.Forms.Label();
++			this.label9.AutoSize = true;
+ 			this.gravity = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.grouprendering = new System.Windows.Forms.GroupBox();
+ 			this.resetalpha = new System.Windows.Forms.Button();
+ 			this.labelScale = new System.Windows.Forms.Label();
++			this.labelScale.AutoSize = true;
+ 			this.scale = new CodeImp.DoomBuilder.Controls.PairedFloatControl();
+ 			this.color = new CodeImp.DoomBuilder.Controls.ColorFieldsControl();
+ 			this.alpha = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.renderStyle = new System.Windows.Forms.ComboBox();
+ 			this.labelrenderstyle = new System.Windows.Forms.Label();
++			this.labelrenderstyle.AutoSize = true;
+ 			this.actiongroup = new System.Windows.Forms.GroupBox();
+ 			this.argscontrol = new CodeImp.DoomBuilder.Controls.ArgumentsControl();
+ 			this.actionhelp = new CodeImp.DoomBuilder.Controls.ActionSpecialHelpButton();
+@@ -98,6 +113,7 @@ private void InitializeComponent()
+ 			this.apply = new System.Windows.Forms.Button();
+ 			this.hint = new System.Windows.Forms.PictureBox();
+ 			this.hintlabel = new System.Windows.Forms.Label();
++			this.hintlabel.AutoSize = true;
+ 			this.tooltip = new System.Windows.Forms.ToolTip(this.components);
+ 			this.groupBox1.SuspendLayout();
+ 			this.groupBox2.SuspendLayout();
+@@ -1152,4 +1168,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox hidefixedfields;
+ 		private System.Windows.Forms.Button resetalpha;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ThingsFiltersForm.Designer.cs b/Source/Core/Windows/ThingsFiltersForm.Designer.cs
+index 4fc789337..01e997f44 100755
+--- a/Source/Core/Windows/ThingsFiltersForm.Designer.cs
++++ b/Source/Core/Windows/ThingsFiltersForm.Designer.cs
+@@ -38,45 +38,61 @@ private void InitializeComponent()
+ 			this.filtergroup = new System.Windows.Forms.GroupBox();
+ 			this.filtermode = new System.Windows.Forms.ComboBox();
+ 			this.label9 = new System.Windows.Forms.Label();
++			this.label9.AutoSize = true;
+ 			this.invert = new System.Windows.Forms.CheckBox();
+ 			this.tabs = new System.Windows.Forms.TabControl();
+ 			this.tabbasic = new System.Windows.Forms.TabPage();
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.labelzheight = new System.Windows.Forms.Label();
++			this.labelzheight.AutoSize = true;
+ 			this.filterzheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.browseangle = new System.Windows.Forms.Button();
+ 			this.filterangle = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.filtertype = new CodeImp.DoomBuilder.Controls.ActionSelectorControl();
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.browsetype = new System.Windows.Forms.Button();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.filtercategory = new System.Windows.Forms.ComboBox();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.tabflags = new System.Windows.Forms.TabPage();
+ 			this.filterfields = new CodeImp.DoomBuilder.Controls.CheckboxArrayControl();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.tabaction = new System.Windows.Forms.TabPage();
+ 			this.argumentspanel = new System.Windows.Forms.Panel();
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.arg2 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.arg1 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.arg0 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.arg3 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.arg4 = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.arg1label = new System.Windows.Forms.Label();
++			this.arg1label.AutoSize = true;
+ 			this.arg0label = new System.Windows.Forms.Label();
++			this.arg0label.AutoSize = true;
+ 			this.arg3label = new System.Windows.Forms.Label();
++			this.arg3label.AutoSize = true;
+ 			this.arg2label = new System.Windows.Forms.Label();
++			this.arg2label.AutoSize = true;
+ 			this.arg4label = new System.Windows.Forms.Label();
++			this.arg4label.AutoSize = true;
+ 			this.filteraction = new CodeImp.DoomBuilder.Controls.ActionSelectorControl();
+ 			this.browseaction = new System.Windows.Forms.Button();
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.filtertag = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.labeltag = new System.Windows.Forms.Label();
++			this.labeltag.AutoSize = true;
+ 			this.tabcustom = new System.Windows.Forms.TabPage();
+ 			this.fieldslist = new CodeImp.DoomBuilder.Controls.FieldsEditorControl();
+ 			this.filtername = new System.Windows.Forms.TextBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.apply = new System.Windows.Forms.Button();
+ 			this.filtergroup.SuspendLayout();
+@@ -770,4 +786,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Label label9;
+ 		private System.Windows.Forms.ImageList imagelist;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/ThingsFiltersForm.cs b/Source/Core/Windows/ThingsFiltersForm.cs
+index 10eef6187..e667367b9 100755
+--- a/Source/Core/Windows/ThingsFiltersForm.cs
++++ b/Source/Core/Windows/ThingsFiltersForm.cs
+@@ -602,4 +602,4 @@ private void filtermode_SelectedIndexChanged(object sender, EventArgs e)
+ 		
+ 		#endregion
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Core/Windows/UpdateForm.Designer.cs b/Source/Core/Windows/UpdateForm.Designer.cs
+index cf6eaf0b5..40e131e0c 100755
+--- a/Source/Core/Windows/UpdateForm.Designer.cs
++++ b/Source/Core/Windows/UpdateForm.Designer.cs
+@@ -29,7 +29,9 @@ private void InitializeComponent() {
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.downloadupdate = new System.Windows.Forms.Button();
+ 			this.label = new System.Windows.Forms.Label();
++			this.label.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.changelog = new System.Windows.Forms.RichTextBox();
+ 			this.hint = new System.Windows.Forms.PictureBox();
+ 			this.ignorethisupdate = new System.Windows.Forms.CheckBox();
+@@ -152,4 +154,4 @@ private void InitializeComponent() {
+ 		private System.Windows.Forms.PictureBox hint;
+ 		private System.Windows.Forms.CheckBox ignorethisupdate;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/3DFloorMode/Controls/ThreeDFloorControl.Designer.cs b/Source/Plugins/3DFloorMode/Controls/ThreeDFloorControl.Designer.cs
+index dd98a3c9b..89e9d0031 100644
+--- a/Source/Plugins/3DFloorMode/Controls/ThreeDFloorControl.Designer.cs
++++ b/Source/Plugins/3DFloorMode/Controls/ThreeDFloorControl.Designer.cs
+@@ -34,8 +34,11 @@ private void InitializeComponent()
+ 			this.sectorCeilingHeight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.sectorFloorHeight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.checkedListBoxSectors = new System.Windows.Forms.CheckedListBox();
+ 			this.buttonDuplicate = new System.Windows.Forms.Button();
+@@ -43,17 +46,24 @@ private void InitializeComponent()
+ 			this.buttonCheckAll = new System.Windows.Forms.Button();
+ 			this.buttonUncheckAll = new System.Windows.Forms.Button();
+ 			this.borderHeightLabel = new System.Windows.Forms.Label();
++			this.borderHeightLabel.AutoSize = true;
+ 			this.typeArgument = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.flagsArgument = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.buttonEditSector = new System.Windows.Forms.Button();
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.alphaArgument = new CodeImp.DoomBuilder.Controls.ArgumentBox();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.sectorBrightness = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.tagsLabel = new System.Windows.Forms.Label();
++			this.tagsLabel.AutoSize = true;
+ 			this.buttonDetach = new System.Windows.Forms.Button();
+ 			this.groupBox2.SuspendLayout();
+ 			this.SuspendLayout();
+diff --git a/Source/Plugins/3DFloorMode/Controls/ThreeDFloorTooltipControl.Designer.cs b/Source/Plugins/3DFloorMode/Controls/ThreeDFloorTooltipControl.Designer.cs
+index 66da4d2b8..59c16a43c 100644
+--- a/Source/Plugins/3DFloorMode/Controls/ThreeDFloorTooltipControl.Designer.cs
++++ b/Source/Plugins/3DFloorMode/Controls/ThreeDFloorTooltipControl.Designer.cs
+@@ -29,11 +29,17 @@ protected override void Dispose(bool disposing)
+ 		private void InitializeComponent()
+ 		{
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.bottomHeight = new System.Windows.Forms.Label();
++			this.bottomHeight.AutoSize = true;
+ 			this.topHeight = new System.Windows.Forms.Label();
++			this.topHeight.AutoSize = true;
+ 			this.borderHeight = new System.Windows.Forms.Label();
++			this.borderHeight.AutoSize = true;
+ 			this.sectorTopFlat = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.sectorBorderTexture = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+ 			this.sectorBottomFlat = new CodeImp.DoomBuilder.Controls.ConfigurablePictureBox();
+diff --git a/Source/Plugins/3DFloorMode/Interface/PreferencesForm.Designer.cs b/Source/Plugins/3DFloorMode/Interface/PreferencesForm.Designer.cs
+index d425c21ce..e1d88b2a4 100644
+--- a/Source/Plugins/3DFloorMode/Interface/PreferencesForm.Designer.cs
++++ b/Source/Plugins/3DFloorMode/Interface/PreferencesForm.Designer.cs
+@@ -32,10 +32,13 @@ private void InitializeComponent()
+ 			this.tabPage1 = new System.Windows.Forms.TabPage();
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.sectorlabels = new System.Windows.Forms.ComboBox();
+ 			this.slopevertexlabels = new System.Windows.Forms.ComboBox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.tabs.SuspendLayout();
+ 			this.tabPage1.SuspendLayout();
+ 			this.groupBox1.SuspendLayout();
+@@ -160,4 +163,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Label label1;
+ 		private System.Windows.Forms.Label label3;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/3DFloorMode/Windows/ControlSectorAreaConfig.Designer.cs b/Source/Plugins/3DFloorMode/Windows/ControlSectorAreaConfig.Designer.cs
+index db103d378..28f659bef 100644
+--- a/Source/Plugins/3DFloorMode/Windows/ControlSectorAreaConfig.Designer.cs
++++ b/Source/Plugins/3DFloorMode/Windows/ControlSectorAreaConfig.Designer.cs
+@@ -30,7 +30,9 @@ private void InitializeComponent()
+ 		{
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.lastTag = new CodeImp.DoomBuilder.Controls.NumericTextbox();
+ 			this.firstTag = new CodeImp.DoomBuilder.Controls.NumericTextbox();
+ 			this.useTagRange = new System.Windows.Forms.CheckBox();
+@@ -158,4 +160,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button okButton;
+ 		private System.Windows.Forms.Button cancelButton;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/3DFloorMode/Windows/SlopeVertexEditForm.Designer.cs b/Source/Plugins/3DFloorMode/Windows/SlopeVertexEditForm.Designer.cs
+index 915106f0a..d899849c7 100644
+--- a/Source/Plugins/3DFloorMode/Windows/SlopeVertexEditForm.Designer.cs
++++ b/Source/Plugins/3DFloorMode/Windows/SlopeVertexEditForm.Designer.cs
+@@ -32,8 +32,11 @@ private void InitializeComponent()
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.positionz = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.positiony = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.positionx = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+@@ -340,4 +343,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox addselectedsectorsfloor;
+ 		private System.Windows.Forms.CheckBox spline;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/3DFloorMode/Windows/ThreeDFloorEditorWindow.Designer.cs b/Source/Plugins/3DFloorMode/Windows/ThreeDFloorEditorWindow.Designer.cs
+index e638f8c5b..c51383634 100644
+--- a/Source/Plugins/3DFloorMode/Windows/ThreeDFloorEditorWindow.Designer.cs
++++ b/Source/Plugins/3DFloorMode/Windows/ThreeDFloorEditorWindow.Designer.cs
+@@ -38,6 +38,7 @@ private void InitializeComponent()
+ 			this.no3dfloorspanel = new System.Windows.Forms.Panel();
+ 			this.add3dfloorbutton2 = new System.Windows.Forms.Button();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.detachAllButton = new System.Windows.Forms.Button();
+ 			this.splitAllButton = new System.Windows.Forms.Button();
+ 			this.checkAllButton = new System.Windows.Forms.Button();
+@@ -234,4 +235,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button checkAllButton;
+ 		private System.Windows.Forms.Button uncheckAllButton;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderEffects/Controls/BoolControl.designer.cs b/Source/Plugins/BuilderEffects/Controls/BoolControl.designer.cs
+index 22f768f65..e8adc5118 100755
+--- a/Source/Plugins/BuilderEffects/Controls/BoolControl.designer.cs
++++ b/Source/Plugins/BuilderEffects/Controls/BoolControl.designer.cs
+@@ -26,6 +26,7 @@ protected override void Dispose(bool disposing) {
+ 		/// </summary>
+ 		private void InitializeComponent() {
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.checkBox1 = new System.Windows.Forms.CheckBox();
+ 			this.SuspendLayout();
+ 			// 
+diff --git a/Source/Plugins/BuilderEffects/Controls/IntControl.designer.cs b/Source/Plugins/BuilderEffects/Controls/IntControl.designer.cs
+index 267abec0c..e654ede46 100755
+--- a/Source/Plugins/BuilderEffects/Controls/IntControl.designer.cs
++++ b/Source/Plugins/BuilderEffects/Controls/IntControl.designer.cs
+@@ -29,6 +29,7 @@ private void InitializeComponent()
+ 		{
+ 			this.trackBar1 = new System.Windows.Forms.TrackBar();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			#if !MONO_WINFORMS
+ 			this.numericUpDown1 = new CodeImp.DoomBuilder.BuilderEffects.NumericUpDownEx();
+ 			#else
+@@ -39,6 +40,7 @@ private void InitializeComponent()
+ 			};
+ 			#endif
+ 			this.labelMaximum = new System.Windows.Forms.Label();
++			this.labelMaximum.AutoSize = true;
+ 			((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
+ 			((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
+ 			this.SuspendLayout();
+diff --git a/Source/Plugins/BuilderEffects/Interface/JitterSectorsForm.Designer.cs b/Source/Plugins/BuilderEffects/Interface/JitterSectorsForm.Designer.cs
+index 7285a3cb2..9a23e96f5 100755
+--- a/Source/Plugins/BuilderEffects/Interface/JitterSectorsForm.Designer.cs
++++ b/Source/Plugins/BuilderEffects/Interface/JitterSectorsForm.Designer.cs
+@@ -45,9 +45,11 @@ private void InitializeComponent() {
+ 			this.cbUseFloorVertexHeights = new System.Windows.Forms.CheckBox();
+ 			this.cbUseCeilingVertexHeights = new System.Windows.Forms.CheckBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.ceiloffsetmode = new System.Windows.Forms.ComboBox();
+ 			this.flooroffsetmode = new System.Windows.Forms.ComboBox();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+@@ -450,4 +452,4 @@ private void InitializeComponent() {
+ 		private System.Windows.Forms.GroupBox groupBox3;
+ 		private System.Windows.Forms.GroupBox groupBox4;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderEffects/Interface/JitterThingsForm.Designer.cs b/Source/Plugins/BuilderEffects/Interface/JitterThingsForm.Designer.cs
+index d98d78c74..0441b90ef 100755
+--- a/Source/Plugins/BuilderEffects/Interface/JitterThingsForm.Designer.cs
++++ b/Source/Plugins/BuilderEffects/Interface/JitterThingsForm.Designer.cs
+@@ -51,13 +51,17 @@ private void InitializeComponent() {
+ 			this.cbRelativeScale = new System.Windows.Forms.CheckBox();
+ 			this.bUpdateScaleY = new System.Windows.Forms.Button();
+ 			this.maxScaleYLabel = new System.Windows.Forms.Label();
++			this.maxScaleYLabel.AutoSize = true;
+ 			this.maxScaleY = new System.Windows.Forms.NumericUpDown();
+ 			this.minScaleYLabel = new System.Windows.Forms.Label();
++			this.minScaleYLabel.AutoSize = true;
+ 			this.minScaleY = new System.Windows.Forms.NumericUpDown();
+ 			this.bUpdateScaleX = new System.Windows.Forms.Button();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.maxScaleX = new System.Windows.Forms.NumericUpDown();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.minScaleX = new System.Windows.Forms.NumericUpDown();
+ 			this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+ 			this.groupBox1.SuspendLayout();
+@@ -600,4 +604,4 @@ private void InitializeComponent() {
+ 		private System.Windows.Forms.CheckBox cbNegativeRoll;
+ 		private System.Windows.Forms.CheckBox cbNegativePitch;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderEffects/Interface/ObjImportSettingsForm.Designer.cs b/Source/Plugins/BuilderEffects/Interface/ObjImportSettingsForm.Designer.cs
+index bfe5a6fa6..469b1b404 100755
+--- a/Source/Plugins/BuilderEffects/Interface/ObjImportSettingsForm.Designer.cs
++++ b/Source/Plugins/BuilderEffects/Interface/ObjImportSettingsForm.Designer.cs
+@@ -26,12 +26,15 @@ protected override void Dispose(bool disposing) {
+ 		/// </summary>
+ 		private void InitializeComponent() {
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.nudScale = new System.Windows.Forms.NumericUpDown();
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.import = new System.Windows.Forms.Button();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.tbImportPath = new System.Windows.Forms.TextBox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.axisx = new System.Windows.Forms.RadioButton();
+ 			this.axisy = new System.Windows.Forms.RadioButton();
+ 			this.axisz = new System.Windows.Forms.RadioButton();
+@@ -243,4 +246,4 @@ private void InitializeComponent() {
+ 		private System.Windows.Forms.OpenFileDialog openFileDialog;
+ 		private System.Windows.Forms.CheckBox cbusevertexheight;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/BridgeModeForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/BridgeModeForm.Designer.cs
+index af7fe9e78..9b00030a5 100755
+--- a/Source/Plugins/BuilderModes/Interface/BridgeModeForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/BridgeModeForm.Designer.cs
+@@ -32,10 +32,14 @@ private void InitializeComponent()
+ 			this.cbCeilingAlign = new System.Windows.Forms.ComboBox();
+ 			this.cbBrightness = new System.Windows.Forms.ComboBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.nudSubdivisions = new System.Windows.Forms.NumericUpDown();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.buttonFlip = new System.Windows.Forms.Button();
+ 			this.cbMirror = new System.Windows.Forms.CheckBox();
+ 			this.cbCopy = new System.Windows.Forms.CheckBox();
+@@ -227,4 +231,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox cbMirror;
+ 		private System.Windows.Forms.CheckBox cbCopy;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/ChangeMapElementIndexForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/ChangeMapElementIndexForm.Designer.cs
+index e3241463c..c9da4b605 100644
+--- a/Source/Plugins/BuilderModes/Interface/ChangeMapElementIndexForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/ChangeMapElementIndexForm.Designer.cs
+@@ -31,11 +31,16 @@ private void InitializeComponent()
+ 		{
+ 			this.components = new System.ComponentModel.Container();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.bntNewIndex = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.lbCurrentIndex = new System.Windows.Forms.Label();
++			this.lbCurrentIndex.AutoSize = true;
+ 			this.lbMaximumIndex = new System.Windows.Forms.Label();
++			this.lbMaximumIndex.AutoSize = true;
+ 			this.btnOk = new System.Windows.Forms.Button();
+ 			this.btnCancel = new System.Windows.Forms.Button();
+ 			this.pbWarning = new System.Windows.Forms.PictureBox();
+@@ -178,4 +183,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.PictureBox pbWarning;
+ 		private System.Windows.Forms.ToolTip toolTip;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/DrawGridOptionsPanel.Designer.cs b/Source/Plugins/BuilderModes/Interface/DrawGridOptionsPanel.Designer.cs
+index ee5970456..98635b05e 100755
+--- a/Source/Plugins/BuilderModes/Interface/DrawGridOptionsPanel.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/DrawGridOptionsPanel.Designer.cs
+@@ -31,17 +31,22 @@ private void InitializeComponent()
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.gridlockmode = new System.Windows.Forms.ComboBox();
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.triangulate = new System.Windows.Forms.CheckBox();
+ 			this.reset = new System.Windows.Forms.Button();
+ 			this.slicesV = new System.Windows.Forms.NumericUpDown();
+ 			this.slicesH = new System.Windows.Forms.NumericUpDown();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.interpvmode = new System.Windows.Forms.ComboBox();
+ 			this.interphmode = new System.Windows.Forms.ComboBox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+ 			this.relativeinterpolation = new System.Windows.Forms.CheckBox();
+ 			this.showguidelines = new System.Windows.Forms.CheckBox();
+diff --git a/Source/Plugins/BuilderModes/Interface/EditSelectionPanel.Designer.cs b/Source/Plugins/BuilderModes/Interface/EditSelectionPanel.Designer.cs
+index 398297abb..34077a730 100755
+--- a/Source/Plugins/BuilderModes/Interface/EditSelectionPanel.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/EditSelectionPanel.Designer.cs
+@@ -36,28 +36,44 @@ private void InitializeComponent()
+ 			this.orgposy = new System.Windows.Forms.Button();
+ 			this.orgposx = new System.Windows.Forms.Button();
+ 			this.label16 = new System.Windows.Forms.Label();
++			this.label16.AutoSize = true;
+ 			this.label19 = new System.Windows.Forms.Label();
++			this.label19.AutoSize = true;
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.orgsizey = new System.Windows.Forms.Button();
+ 			this.orgsizex = new System.Windows.Forms.Button();
+ 			this.label12 = new System.Windows.Forms.Label();
++			this.label12.AutoSize = true;
+ 			this.label9 = new System.Windows.Forms.Label();
++			this.label9.AutoSize = true;
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+ 			this.heightmode = new System.Windows.Forms.ComboBox();
+ 			this.label10 = new System.Windows.Forms.Label();
++			this.label10.AutoSize = true;
+ 			this.label14 = new System.Windows.Forms.Label();
++			this.label14.AutoSize = true;
+ 			this.flipv = new System.Windows.Forms.Button();
+ 			this.fliph = new System.Windows.Forms.Button();
+ 			this.label13 = new System.Windows.Forms.Label();
++			this.label13.AutoSize = true;
+ 			this.label11 = new System.Windows.Forms.Label();
++			this.label11.AutoSize = true;
+ 			this.tooltip = new System.Windows.Forms.ToolTip(this.components);
+ 			this.pinfloortextures = new System.Windows.Forms.CheckBox();
+ 			this.gbTextures = new System.Windows.Forms.GroupBox();
+diff --git a/Source/Plugins/BuilderModes/Interface/ErrorCheckForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/ErrorCheckForm.Designer.cs
+index 8b40126ab..c80d5bc61 100755
+--- a/Source/Plugins/BuilderModes/Interface/ErrorCheckForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/ErrorCheckForm.Designer.cs
+@@ -45,6 +45,7 @@ private void InitializeComponent()
+ 			this.fix3 = new System.Windows.Forms.Button();
+ 			this.fix2 = new System.Windows.Forms.Button();
+ 			this.resultinfo = new System.Windows.Forms.Label();
++			this.resultinfo.AutoSize = true;
+ 			this.fix1 = new System.Windows.Forms.Button();
+ 			this.progress = new System.Windows.Forms.ProgressBar();
+ 			this.closebutton = new System.Windows.Forms.Button();
+@@ -323,4 +324,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.ToolStripMenuItem resultselectcurrenttype;
+ 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/FindReplaceForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/FindReplaceForm.Designer.cs
+index a0a5e6289..95b6be4f0 100755
+--- a/Source/Plugins/BuilderModes/Interface/FindReplaceForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/FindReplaceForm.Designer.cs
+@@ -31,6 +31,7 @@ private void InitializeComponent()
+ 			this.components = new System.ComponentModel.Container();
+ 			System.Windows.Forms.Label label1;
+ 			this.labelfind = new System.Windows.Forms.Label();
++			this.labelfind.AutoSize = true;
+ 			this.searchtypes = new System.Windows.Forms.ComboBox();
+ 			this.findinput = new CodeImp.DoomBuilder.Controls.AutoSelectTextbox();
+ 			this.browsefind = new System.Windows.Forms.Button();
+@@ -41,6 +42,7 @@ private void InitializeComponent()
+ 			this.closebutton = new System.Windows.Forms.Button();
+ 			this.resultslist = new System.Windows.Forms.ListBox();
+ 			this.resultscount = new System.Windows.Forms.Label();
++			this.resultscount.AutoSize = true;
+ 			this.resultspanel = new System.Windows.Forms.Panel();
+ 			this.deletebutton = new System.Windows.Forms.Button();
+ 			this.editbutton = new System.Windows.Forms.Button();
+@@ -284,4 +286,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.ToolTip tooltip;
+ 		private System.Windows.Forms.Label labelfind;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/FitTexturesForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/FitTexturesForm.Designer.cs
+index 19f974c12..39106e962 100755
+--- a/Source/Plugins/BuilderModes/Interface/FitTexturesForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/FitTexturesForm.Designer.cs
+@@ -26,6 +26,7 @@ protected override void Dispose(bool disposing) {
+ 		/// </summary>
+ 		private void InitializeComponent() {
+ 			this.labelhorizrepeat = new System.Windows.Forms.Label();
++			this.labelhorizrepeat.AutoSize = true;
+ 			this.repeatgroup = new System.Windows.Forms.GroupBox();
+ 			this.vertrepeat = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.horizrepeat = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+@@ -34,6 +35,7 @@ private void InitializeComponent() {
+ 			this.resetvert = new System.Windows.Forms.Button();
+ 			this.resethoriz = new System.Windows.Forms.Button();
+ 			this.labelvertrepeat = new System.Windows.Forms.Label();
++			this.labelvertrepeat.AutoSize = true;
+ 			this.cbfitwidth = new System.Windows.Forms.CheckBox();
+ 			this.accept = new System.Windows.Forms.Button();
+ 			this.cancel = new System.Windows.Forms.Button();
+@@ -43,7 +45,9 @@ private void InitializeComponent() {
+ 			this.patternheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.patternwidth = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.labelpatternheight = new System.Windows.Forms.Label();
++			this.labelpatternheight.AutoSize = true;
+ 			this.labelpatternwidth = new System.Windows.Forms.Label();
++			this.labelpatternwidth.AutoSize = true;
+ 			this.repeatgroup.SuspendLayout();
+ 			this.groupBox2.SuspendLayout();
+ 			this.SuspendLayout();
+@@ -342,4 +346,4 @@ private void InitializeComponent() {
+ 		private Controls.ButtonsNumericTextbox patternwidth;
+ 		private Controls.ButtonsNumericTextbox patternheight;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/ImageExportSettingsForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/ImageExportSettingsForm.Designer.cs
+index 7165d9c64..827399494 100644
+--- a/Source/Plugins/BuilderModes/Interface/ImageExportSettingsForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/ImageExportSettingsForm.Designer.cs
+@@ -31,23 +31,28 @@ private void InitializeComponent()
+ 			this.components = new System.ComponentModel.Container();
+ 			this.tbExportPath = new System.Windows.Forms.TextBox();
+ 			this.browse = new System.Windows.Forms.Button();
+-			this.label1 = new System.Windows.Forms.Label();
++			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.close = new System.Windows.Forms.Button();
+ 			this.export = new System.Windows.Forms.Button();
+ 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+ 			this.cbImageFormat = new System.Windows.Forms.ComboBox();
+ 			this.cbPixelFormat = new System.Windows.Forms.ComboBox();
+-			this.label2 = new System.Windows.Forms.Label();
+-			this.label3 = new System.Windows.Forms.Label();
++			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
++			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.rbFloor = new System.Windows.Forms.RadioButton();
+ 			this.rbCeiling = new System.Windows.Forms.RadioButton();
+ 			this.cbFullbright = new System.Windows.Forms.CheckBox();
+ 			this.cbBrightmap = new System.Windows.Forms.CheckBox();
+ 			this.cbTiles = new System.Windows.Forms.CheckBox();
+ 			this.cbScale = new System.Windows.Forms.ComboBox();
+-			this.label4 = new System.Windows.Forms.Label();
++			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.progress = new System.Windows.Forms.ProgressBar();
+-			this.lbPhase = new System.Windows.Forms.Label();
++			this.lbPhase = new System.Windows.Forms.Label();
++			this.lbPhase.AutoSize = true;
+ 			this.cbApplySectorColors = new System.Windows.Forms.CheckBox();
+ 			this.cbTransparency = new System.Windows.Forms.CheckBox();
+ 			this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+@@ -335,4 +340,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox cbTransparency;
+ 		private System.Windows.Forms.ToolTip toolTip;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/MakeDoorForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/MakeDoorForm.Designer.cs
+index d9b8b8f41..8c603974b 100755
+--- a/Source/Plugins/BuilderModes/Interface/MakeDoorForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/MakeDoorForm.Designer.cs
+@@ -30,15 +30,19 @@ private void InitializeComponent()
+ 		{
+ 			this.doortexture = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.ceilingtexture = new CodeImp.DoomBuilder.Controls.FlatSelectorControl();
+ 			this.floortexture = new CodeImp.DoomBuilder.Controls.FlatSelectorControl();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.apply = new System.Windows.Forms.Button();
+ 			this.resetoffsets = new System.Windows.Forms.CheckBox();
+ 			this.tracktexture = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.applyactionspecials = new System.Windows.Forms.CheckBox();
+ 			this.applytag = new System.Windows.Forms.CheckBox();
+ 			this.SuspendLayout();
+@@ -229,4 +233,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox applyactionspecials;
+ 		private System.Windows.Forms.CheckBox applytag;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/ObjExporterSettingsForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/ObjExporterSettingsForm.Designer.cs
+index 7d38f0e2a..4f793f2e0 100755
+--- a/Source/Plugins/BuilderModes/Interface/ObjExporterSettingsForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/ObjExporterSettingsForm.Designer.cs
+@@ -28,6 +28,7 @@ private void InitializeComponent() {
+ 			this.tbExportPath = new System.Windows.Forms.TextBox();
+ 			this.browse = new System.Windows.Forms.Button();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.cbFixScale = new System.Windows.Forms.CheckBox();
+ 			this.export = new System.Windows.Forms.Button();
+ 			this.cancel = new System.Windows.Forms.Button();
+@@ -142,4 +143,4 @@ private void InitializeComponent() {
+ 		private System.Windows.Forms.SaveFileDialog saveFileDialog;
+ 		private System.Windows.Forms.CheckBox cbExportTextures;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/PreferencesForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/PreferencesForm.Designer.cs
+index e58bc14f5..67736c09d 100755
+--- a/Source/Plugins/BuilderModes/Interface/PreferencesForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/PreferencesForm.Designer.cs
+@@ -35,13 +35,18 @@ private void InitializeComponent()
+ 			this.eventlinelabelvisibility = new System.Windows.Forms.ComboBox();
+ 			this.groupBox4 = new System.Windows.Forms.GroupBox();
+ 			this.label15 = new System.Windows.Forms.Label();
++			this.label15.AutoSize = true;
+ 			this.label14 = new System.Windows.Forms.Label();
++			this.label14.AutoSize = true;
+ 			this.defaultfloorheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label13 = new System.Windows.Forms.Label();
++			this.label13.AutoSize = true;
+ 			this.defaultceilheight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label12 = new System.Windows.Forms.Label();
++			this.label12.AutoSize = true;
+ 			this.defaultbrightness = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label11 = new System.Windows.Forms.Label();
++			this.label11.AutoSize = true;
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+ 			this.selectafterundoredo = new System.Windows.Forms.CheckBox();
+ 			this.useoppositesmartpivothandle = new System.Windows.Forms.CheckBox();
+@@ -60,25 +65,38 @@ private void InitializeComponent()
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.mouseselectionthreshold = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label16 = new System.Windows.Forms.Label();
++			this.label16.AutoSize = true;
+ 			this.label17 = new System.Windows.Forms.Label();
++			this.label17.AutoSize = true;
+ 			this.splitlinedefsrange = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.stitchrange = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.highlightthingsrange = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.highlightrange = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.label9 = new System.Windows.Forms.Label();
++			this.label9.AutoSize = true;
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.scaletexturesonslopes = new System.Windows.Forms.ComboBox();
+ 			this.label18 = new System.Windows.Forms.Label();
++			this.label18.AutoSize = true;
+ 			this.splitbehavior = new System.Windows.Forms.ComboBox();
+ 			this.label10 = new System.Windows.Forms.Label();
++			this.label10.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.heightbysidedef = new System.Windows.Forms.ComboBox();
+ 			this.usebuggyfloodselect = new System.Windows.Forms.CheckBox();
+ 			this.tabs.SuspendLayout();
+@@ -826,4 +844,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox selectafterundoredo;
+ 		private System.Windows.Forms.CheckBox usebuggyfloodselect;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/SectorDrawingOptionsPanel.Designer.cs b/Source/Plugins/BuilderModes/Interface/SectorDrawingOptionsPanel.Designer.cs
+index 0667649db..417998c03 100755
+--- a/Source/Plugins/BuilderModes/Interface/SectorDrawingOptionsPanel.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/SectorDrawingOptionsPanel.Designer.cs
+@@ -36,7 +36,9 @@ private void InitializeComponent()
+ 			this.cbOverrideCeilingTexture = new System.Windows.Forms.CheckBox();
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label14 = new System.Windows.Forms.Label();
++			this.label14.AutoSize = true;
+ 			this.cbBrightness = new System.Windows.Forms.CheckBox();
+ 			this.brightness = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.floorHeight = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+diff --git a/Source/Plugins/BuilderModes/Interface/SlopeArchForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/SlopeArchForm.Designer.cs
+index ad9a9512d..78b428bcb 100644
+--- a/Source/Plugins/BuilderModes/Interface/SlopeArchForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/SlopeArchForm.Designer.cs
+@@ -30,16 +30,20 @@ private void InitializeComponent()
+ 		{
+ 			this.theta = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.offset = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.accept = new System.Windows.Forms.Button();
+ 			this.up = new System.Windows.Forms.RadioButton();
+ 			this.down = new System.Windows.Forms.RadioButton();
+ 			this.scale = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.heightoffset = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.halfcircle = new System.Windows.Forms.Button();
+ 			this.quartercircleright = new System.Windows.Forms.Button();
+ 			this.quartercircleleft = new System.Windows.Forms.Button();
+@@ -335,4 +339,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.GroupBox groupBox1;
+ 		private System.Windows.Forms.Button invert;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/BuilderModes/Interface/WavefrontSettingsForm.Designer.cs b/Source/Plugins/BuilderModes/Interface/WavefrontSettingsForm.Designer.cs
+index f126fb9f9..f82bc8ee9 100755
+--- a/Source/Plugins/BuilderModes/Interface/WavefrontSettingsForm.Designer.cs
++++ b/Source/Plugins/BuilderModes/Interface/WavefrontSettingsForm.Designer.cs
+@@ -31,6 +31,7 @@ private void InitializeComponent()
+ 			this.components = new System.ComponentModel.Container();
+ 			this.tbExportPath = new System.Windows.Forms.TextBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.cbExportForGZDoom = new System.Windows.Forms.CheckBox();
+ 			this.export = new System.Windows.Forms.Button();
+ 			this.cancel = new System.Windows.Forms.Button();
+@@ -38,6 +39,7 @@ private void InitializeComponent()
+ 			this.cbExportTextures = new System.Windows.Forms.CheckBox();
+ 			this.nudScale = new System.Windows.Forms.NumericUpDown();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.gbGZDoom = new System.Windows.Forms.GroupBox();
+ 			this.cbGenerateCode = new System.Windows.Forms.CheckBox();
+ 			this.cbGenerateModeldef = new System.Windows.Forms.CheckBox();
+@@ -48,20 +50,25 @@ private void InitializeComponent()
+ 			this.gbActorSettings = new System.Windows.Forms.GroupBox();
+ 			this.tbSprite = new System.Windows.Forms.TextBox();
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.cbSolid = new System.Windows.Forms.CheckBox();
+ 			this.cbSpawnOnCeiling = new System.Windows.Forms.CheckBox();
+ 			this.cbNoGravity = new System.Windows.Forms.CheckBox();
+ 			this.bResetPaths = new System.Windows.Forms.Button();
+ 			this.tbActorName = new System.Windows.Forms.TextBox();
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.bBrowseModelPath = new System.Windows.Forms.Button();
+ 			this.tbModelPath = new System.Windows.Forms.TextBox();
+ 			this.bBrowseActorPath = new System.Windows.Forms.Button();
+ 			this.tbActorPath = new System.Windows.Forms.TextBox();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.bBrowseBasePath = new System.Windows.Forms.Button();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.tbBasePath = new System.Windows.Forms.TextBox();
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.bRemoveTexture = new System.Windows.Forms.Button();
+@@ -643,4 +650,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox cbGenerateCode;
+ 		private System.Windows.Forms.CheckBox cbGenerateModeldef;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/ColorPicker/Controls/ColorPickerControl.designer.cs b/Source/Plugins/ColorPicker/Controls/ColorPickerControl.designer.cs
+index 313f41a2e..287dcf752 100755
+--- a/Source/Plugins/ColorPicker/Controls/ColorPickerControl.designer.cs
++++ b/Source/Plugins/ColorPicker/Controls/ColorPickerControl.designer.cs
+@@ -28,13 +28,16 @@ private void InitializeComponent() {
+ 			this.btnCancel = new System.Windows.Forms.Button();
+ 			this.btnOK = new System.Windows.Forms.Button();
+ 			this.Label3 = new System.Windows.Forms.Label();
++			this.Label3.AutoSize = true;
+ 			this.nudRed = new System.Windows.Forms.NumericUpDown();
+ 			this.pnlColor = new System.Windows.Forms.Panel();
+ 			this.Label1 = new System.Windows.Forms.Label();
++			this.Label1.AutoSize = true;
+ 			this.pnlBrightness = new System.Windows.Forms.Panel();
+ 			this.nudBlue = new System.Windows.Forms.NumericUpDown();
+ 			this.nudGreen = new System.Windows.Forms.NumericUpDown();
+ 			this.Label2 = new System.Windows.Forms.Label();
++			this.Label2.AutoSize = true;
+ 			this.tbFloatVals = new CodeImp.DoomBuilder.Controls.AutoSelectTextbox();
+ 			this.pRGB = new System.Windows.Forms.Panel();
+ 			this.cbColorInfo = new System.Windows.Forms.ComboBox();
+diff --git a/Source/Plugins/ColorPicker/Controls/ColorPickerSlider.Designer.cs b/Source/Plugins/ColorPicker/Controls/ColorPickerSlider.Designer.cs
+index 53b7cceb1..6a708b296 100755
+--- a/Source/Plugins/ColorPicker/Controls/ColorPickerSlider.Designer.cs
++++ b/Source/Plugins/ColorPicker/Controls/ColorPickerSlider.Designer.cs
+@@ -26,8 +26,11 @@ private void InitializeComponent() {
+ 			this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+ 			this.trackBar1 = new System.Windows.Forms.TrackBar();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.labelMin = new System.Windows.Forms.Label();
++			this.labelMin.AutoSize = true;
+ 			this.labelMax = new System.Windows.Forms.Label();
++			this.labelMax.AutoSize = true;
+ 			this.button1 = new System.Windows.Forms.Button();
+ 			this.button2 = new System.Windows.Forms.Button();
+ 			this.button3 = new System.Windows.Forms.Button();
+diff --git a/Source/Plugins/NodesViewer/NodesForm.Designer.cs b/Source/Plugins/NodesViewer/NodesForm.Designer.cs
+index 9e974f738..27a914ea9 100755
+--- a/Source/Plugins/NodesViewer/NodesForm.Designer.cs
++++ b/Source/Plugins/NodesViewer/NodesForm.Designer.cs
+@@ -18,64 +18,107 @@ private void InitializeComponent()
+ 			this.tabs = new System.Windows.Forms.TabControl();
+ 			this.taboverview = new System.Windows.Forms.TabPage();
+ 			this.label11 = new System.Windows.Forms.Label();
++			this.label11.AutoSize = true;
+ 			this.buildnodesbutton = new System.Windows.Forms.Button();
+ 			this.showsegsvertices = new System.Windows.Forms.CheckBox();
+ 			this.treebalance = new System.Windows.Forms.Label();
++			this.treebalance.AutoSize = true;
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.treedepth = new System.Windows.Forms.Label();
++			this.treedepth.AutoSize = true;
+ 			this.label10 = new System.Windows.Forms.Label();
++			this.label10.AutoSize = true;
+ 			this.numsegs = new System.Windows.Forms.Label();
++			this.numsegs.AutoSize = true;
+ 			this.numsplits = new System.Windows.Forms.Label();
++			this.numsplits.AutoSize = true;
+ 			this.numvertices = new System.Windows.Forms.Label();
++			this.numvertices.AutoSize = true;
+ 			this.numssectors = new System.Windows.Forms.Label();
++			this.numssectors.AutoSize = true;
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.tabsplits = new System.Windows.Forms.TabPage();
+ 			this.parentbutton = new System.Windows.Forms.Button();
+ 			this.parentsplit = new System.Windows.Forms.Label();
++			this.parentsplit.AutoSize = true;
+ 			this.label16 = new System.Windows.Forms.Label();
++			this.label16.AutoSize = true;
+ 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+ 			this.rightindex = new System.Windows.Forms.Label();
++			this.rightindex.AutoSize = true;
+ 			this.rightarea = new System.Windows.Forms.Label();
++			this.rightarea.AutoSize = true;
+ 			this.righttype = new System.Windows.Forms.Label();
++			this.righttype.AutoSize = true;
+ 			this.label15 = new System.Windows.Forms.Label();
++			this.label15.AutoSize = true;
+ 			this.rightbutton = new System.Windows.Forms.Button();
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.leftindex = new System.Windows.Forms.Label();
++			this.leftindex.AutoSize = true;
+ 			this.leftarea = new System.Windows.Forms.Label();
++			this.leftarea.AutoSize = true;
+ 			this.lefttype = new System.Windows.Forms.Label();
++			this.lefttype.AutoSize = true;
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.leftbutton = new System.Windows.Forms.Button();
+ 			this.rootbutton = new System.Windows.Forms.Button();
+ 			this.splitindex = new System.Windows.Forms.NumericUpDown();
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.tabsubsectors = new System.Windows.Forms.TabPage();
+ 			this.viewsegbox = new System.Windows.Forms.CheckBox();
+ 			this.segindex = new System.Windows.Forms.NumericUpDown();
+ 			this.ssectornumsegs = new System.Windows.Forms.Label();
++			this.ssectornumsegs.AutoSize = true;
+ 			this.label9 = new System.Windows.Forms.Label();
++			this.label9.AutoSize = true;
+ 			this.ssparentsplit = new System.Windows.Forms.Button();
+ 			this.ssectorindex = new System.Windows.Forms.NumericUpDown();
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+ 			this.sectorindex = new System.Windows.Forms.Label();
++			this.sectorindex.AutoSize = true;
+ 			this.label22 = new System.Windows.Forms.Label();
++			this.label22.AutoSize = true;
+ 			this.sideindex = new System.Windows.Forms.Label();
++			this.sideindex.AutoSize = true;
+ 			this.label19 = new System.Windows.Forms.Label();
++			this.label19.AutoSize = true;
+ 			this.segoffset = new System.Windows.Forms.Label();
++			this.segoffset.AutoSize = true;
+ 			this.label21 = new System.Windows.Forms.Label();
++			this.label21.AutoSize = true;
+ 			this.segside = new System.Windows.Forms.Label();
++			this.segside.AutoSize = true;
+ 			this.label18 = new System.Windows.Forms.Label();
++			this.label18.AutoSize = true;
+ 			this.segangle = new System.Windows.Forms.Label();
++			this.segangle.AutoSize = true;
+ 			this.label14 = new System.Windows.Forms.Label();
++			this.label14.AutoSize = true;
+ 			this.endvertex = new System.Windows.Forms.Label();
++			this.endvertex.AutoSize = true;
+ 			this.label17 = new System.Windows.Forms.Label();
++			this.label17.AutoSize = true;
+ 			this.startvertex = new System.Windows.Forms.Label();
++			this.startvertex.AutoSize = true;
+ 			this.label13 = new System.Windows.Forms.Label();
++			this.label13.AutoSize = true;
+ 			this.lineindex = new System.Windows.Forms.Label();
++			this.lineindex.AutoSize = true;
+ 			this.label12 = new System.Windows.Forms.Label();
++			this.label12.AutoSize = true;
+ 			this.closebutton = new System.Windows.Forms.Button();
+ 			this.tabs.SuspendLayout();
+ 			this.taboverview.SuspendLayout();
+@@ -837,4 +880,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button buildnodesbutton;
+ 		private System.Windows.Forms.Label label11;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/StairSectorBuilder/StairSectorBuilderForm.designer.cs b/Source/Plugins/StairSectorBuilder/StairSectorBuilderForm.designer.cs
+index 9cf60a887..ca2dc0bc0 100755
+--- a/Source/Plugins/StairSectorBuilder/StairSectorBuilderForm.designer.cs
++++ b/Source/Plugins/StairSectorBuilder/StairSectorBuilderForm.designer.cs
+@@ -33,11 +33,13 @@ private void InitializeComponent()
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.numberofsectors = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.tabcontrol = new System.Windows.Forms.TabControl();
+ 			this.tabPage1 = new System.Windows.Forms.TabPage();
+ 			this.distinctbaseheights = new System.Windows.Forms.CheckBox();
+ 			this.spacing = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label11 = new System.Windows.Forms.Label();
++			this.label11.AutoSize = true;
+ 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+ 			this.distinctsectors = new System.Windows.Forms.CheckBox();
+ 			this.singledirection = new System.Windows.Forms.CheckBox();
+@@ -47,22 +49,30 @@ private void InitializeComponent()
+ 			this.sidefront = new System.Windows.Forms.RadioButton();
+ 			this.sectordepth = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.tabPage2 = new System.Windows.Forms.TabPage();
+ 			this.autocurveflipping = new System.Windows.Forms.ComboBox();
+ 			this.label12 = new System.Windows.Forms.Label();
++			this.label12.AutoSize = true;
+ 			this.autocurveoutervertexmultiplier = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.autocurveinnervertexmultiplier = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label6 = new System.Windows.Forms.Label();
++			this.label6.AutoSize = true;
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.tabPage3 = new System.Windows.Forms.TabPage();
+ 			this.splineflipping = new System.Windows.Forms.ComboBox();
+ 			this.label13 = new System.Windows.Forms.Label();
++			this.label13.AutoSize = true;
+ 			this.splineoutervertexmultiplier = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.splineinnervertexmultiplier = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label16 = new System.Windows.Forms.Label();
++			this.label16.AutoSize = true;
+ 			this.label17 = new System.Windows.Forms.Label();
++			this.label17.AutoSize = true;
+ 			this.numberofcontrolpoints = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label10 = new System.Windows.Forms.Label();
++			this.label10.AutoSize = true;
+ 			this.groupBox4 = new System.Windows.Forms.GroupBox();
+ 			this.floorflattexture = new CodeImp.DoomBuilder.Controls.FlatSelectorControl();
+ 			this.floorflat = new System.Windows.Forms.CheckBox();
+@@ -71,14 +81,20 @@ private void InitializeComponent()
+ 			this.ceilingflattexture = new CodeImp.DoomBuilder.Controls.FlatSelectorControl();
+ 			this.groupBox6 = new System.Windows.Forms.GroupBox();
+ 			this.label14 = new System.Windows.Forms.Label();
++			this.label14.AutoSize = true;
+ 			this.floorbase = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.floorheightmodification = new System.Windows.Forms.CheckBox();
+ 			this.floorlast = new System.Windows.Forms.Label();
++			this.floorlast.AutoSize = true;
+ 			this.floorfirst = new System.Windows.Forms.Label();
++			this.floorfirst.AutoSize = true;
+ 			this.label7 = new System.Windows.Forms.Label();
++			this.label7.AutoSize = true;
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.floorheightmod = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label = new System.Windows.Forms.Label();
++			this.label.AutoSize = true;
+ 			this.groupBox7 = new System.Windows.Forms.GroupBox();
+ 			this.lowerunpegged = new System.Windows.Forms.CheckBox();
+ 			this.lowertexturetexture = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+@@ -88,13 +104,19 @@ private void InitializeComponent()
+ 			this.uppertexturetexture = new CodeImp.DoomBuilder.Controls.TextureSelectorControl();
+ 			this.uppertexture = new System.Windows.Forms.CheckBox();
+ 			this.ceilinglast = new System.Windows.Forms.Label();
++			this.ceilinglast.AutoSize = true;
+ 			this.ceilingfirst = new System.Windows.Forms.Label();
++			this.ceilingfirst.AutoSize = true;
+ 			this.label8 = new System.Windows.Forms.Label();
++			this.label8.AutoSize = true;
+ 			this.label9 = new System.Windows.Forms.Label();
++			this.label9.AutoSize = true;
+ 			this.ceilingheightmod = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.groupBox9 = new System.Windows.Forms.GroupBox();
+ 			this.label15 = new System.Windows.Forms.Label();
++			this.label15.AutoSize = true;
+ 			this.ceilingbase = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.ceilingheightmodification = new System.Windows.Forms.CheckBox();
+ 			this.groupBox11 = new System.Windows.Forms.GroupBox();
+@@ -1254,4 +1276,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox distinctsectors;
+ 		private System.Windows.Forms.Button prefabdefault;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/TagExplorer/Controls/TagExplorer.Designer.cs b/Source/Plugins/TagExplorer/Controls/TagExplorer.Designer.cs
+index f77a36432..b3ce7cfe7 100755
+--- a/Source/Plugins/TagExplorer/Controls/TagExplorer.Designer.cs
++++ b/Source/Plugins/TagExplorer/Controls/TagExplorer.Designer.cs
+@@ -20,13 +20,16 @@ private void InitializeComponent() {
+ 			this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+ 			this.cbDisplayMode = new System.Windows.Forms.ComboBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.cbSortMode = new System.Windows.Forms.ComboBox();
+ 			this.labelsortmode = new System.Windows.Forms.Label();
++			this.labelsortmode.AutoSize = true;
+ 			this.cbCenterOnSelected = new System.Windows.Forms.CheckBox();
+ 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+ 			this.cbCommentsOnly = new System.Windows.Forms.CheckBox();
+ 			this.cbSelectOnClick = new System.Windows.Forms.CheckBox();
+ 			this.labelSearch = new System.Windows.Forms.Label();
++			this.labelSearch.AutoSize = true;
+ 			this.btnClearSearch = new System.Windows.Forms.Button();
+ 			this.tbSearch = new System.Windows.Forms.TextBox();
+ 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+diff --git a/Source/Plugins/TagRange/TagRangeForm.Designer.cs b/Source/Plugins/TagRange/TagRangeForm.Designer.cs
+index 598b0b483..eb7f63c63 100755
+--- a/Source/Plugins/TagRange/TagRangeForm.Designer.cs
++++ b/Source/Plugins/TagRange/TagRangeForm.Designer.cs
+@@ -30,17 +30,24 @@ private void InitializeComponent()
+ 		{
+ 			this.rangestart = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.doubletagwarning = new System.Windows.Forms.Label();
++			this.doubletagwarning.AutoSize = true;
+ 			this.skipdoubletags = new System.Windows.Forms.CheckBox();
+ 			this.okbutton = new System.Windows.Forms.Button();
+ 			this.cancelbutton = new System.Windows.Forms.Button();
+ 			this.outoftagswarning = new System.Windows.Forms.Label();
++			this.outoftagswarning.AutoSize = true;
+ 			this.endtaglabel = new System.Windows.Forms.Label();
++			this.endtaglabel.AutoSize = true;
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.rangestep = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+ 			this.relativemode = new System.Windows.Forms.CheckBox();
+ 			this.bglabel = new System.Windows.Forms.Label();
++			this.bglabel.AutoSize = true;
+ 			this.SuspendLayout();
+ 			// 
+ 			// rangestart
+@@ -252,4 +259,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.CheckBox relativemode;
+ 		private System.Windows.Forms.Label bglabel;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/UDBScript/Controls/ScriptDockerControl.Designer.cs b/Source/Plugins/UDBScript/Controls/ScriptDockerControl.Designer.cs
+index c73f3fa90..975a5ac34 100644
+--- a/Source/Plugins/UDBScript/Controls/ScriptDockerControl.Designer.cs
++++ b/Source/Plugins/UDBScript/Controls/ScriptDockerControl.Designer.cs
+@@ -33,14 +33,19 @@ private void InitializeComponent()
+ 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+ 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+ 			this.label5 = new System.Windows.Forms.Label();
++			this.label5.AutoSize = true;
+ 			this.btnClearFilter = new System.Windows.Forms.Button();
+ 			this.tbFilter = new System.Windows.Forms.TextBox();
+ 			this.filetree = new CodeImp.DoomBuilder.Controls.MultiSelectTreeview();
+ 			this.tbDescription = new System.Windows.Forms.TextBox();
+ 			this.label3 = new System.Windows.Forms.Label();
++			this.label3.AutoSize = true;
+ 			this.label4 = new System.Windows.Forms.Label();
++			this.label4.AutoSize = true;
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.label2 = new System.Windows.Forms.Label();
++			this.label2.AutoSize = true;
+ 			this.scriptoptions = new CodeImp.DoomBuilder.UDBScript.ScriptOptionsControl();
+ 			this.tableLayoutPanel1.SuspendLayout();
+ 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+diff --git a/Source/Plugins/UDBScript/Windows/PreferencesForm.Designer.cs b/Source/Plugins/UDBScript/Windows/PreferencesForm.Designer.cs
+index 9bcfd5fd5..a06da39a5 100644
+--- a/Source/Plugins/UDBScript/Windows/PreferencesForm.Designer.cs
++++ b/Source/Plugins/UDBScript/Windows/PreferencesForm.Designer.cs
+@@ -32,6 +32,7 @@ private void InitializeComponent()
+ 			this.btnSelectExe = new System.Windows.Forms.Button();
+ 			this.exepath = new System.Windows.Forms.TextBox();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.tabs = new System.Windows.Forms.TabControl();
+ 			this.filedialog = new System.Windows.Forms.OpenFileDialog();
+ 			this.tabPage1.SuspendLayout();
+@@ -117,4 +118,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button btnSelectExe;
+ 		private System.Windows.Forms.OpenFileDialog filedialog;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/UDBScript/Windows/ScriptRunnerForm.Designer.cs b/Source/Plugins/UDBScript/Windows/ScriptRunnerForm.Designer.cs
+index 2f7420ccf..a8413293d 100644
+--- a/Source/Plugins/UDBScript/Windows/ScriptRunnerForm.Designer.cs
++++ b/Source/Plugins/UDBScript/Windows/ScriptRunnerForm.Designer.cs
+@@ -30,6 +30,7 @@ private void InitializeComponent()
+ 		{
+ 			this.progressbar = new System.Windows.Forms.ProgressBar();
+ 			this.lbStatus = new System.Windows.Forms.Label();
++			this.lbStatus.AutoSize = true;
+ 			this.btnAction = new System.Windows.Forms.Button();
+ 			this.tbLog = new System.Windows.Forms.TextBox();
+ 			this.SuspendLayout();
+@@ -107,4 +108,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.Button btnAction;
+ 		private System.Windows.Forms.TextBox tbLog;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/UDBScript/Windows/UDBScriptErrorForm.Designer.cs b/Source/Plugins/UDBScript/Windows/UDBScriptErrorForm.Designer.cs
+index a345bc7e5..6416c2b3e 100644
+--- a/Source/Plugins/UDBScript/Windows/UDBScriptErrorForm.Designer.cs
++++ b/Source/Plugins/UDBScript/Windows/UDBScriptErrorForm.Designer.cs
+@@ -30,6 +30,7 @@ private void InitializeComponent()
+ 		{
+ 			this.btnOK = new System.Windows.Forms.Button();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.tabControl1 = new System.Windows.Forms.TabControl();
+ 			this.tabPage1 = new System.Windows.Forms.TabPage();
+ 			this.tabPage2 = new System.Windows.Forms.TabPage();
+@@ -152,4 +153,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.TabPage tabPage2;
+ 		private System.Windows.Forms.TextBox tbInternalStackTrace;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/Source/Plugins/VisplaneExplorer/Windows/SetCustomHeightDialog.Designer.cs b/Source/Plugins/VisplaneExplorer/Windows/SetCustomHeightDialog.Designer.cs
+index 3f6ee3367..64a5261f3 100644
+--- a/Source/Plugins/VisplaneExplorer/Windows/SetCustomHeightDialog.Designer.cs
++++ b/Source/Plugins/VisplaneExplorer/Windows/SetCustomHeightDialog.Designer.cs
+@@ -53,6 +53,7 @@ protected override void Dispose(bool disposing)
+         private void InitializeComponent()
+         {
+             this.label = new System.Windows.Forms.Label();
++            this.label.AutoSize = true;
+             this.input = new CodeImp.DoomBuilder.Controls.ButtonsNumericTextbox();
+             this.apply = new System.Windows.Forms.Button();
+             this.cancel = new System.Windows.Forms.Button();
+diff --git a/Source/Tools/Updater/MainForm.Designer.cs b/Source/Tools/Updater/MainForm.Designer.cs
+index 0150f5461..0121ff3e4 100755
+--- a/Source/Tools/Updater/MainForm.Designer.cs
++++ b/Source/Tools/Updater/MainForm.Designer.cs
+@@ -31,6 +31,7 @@ private void InitializeComponent()
+ 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+ 			this.progressbar = new System.Windows.Forms.ProgressBar();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.cancel = new System.Windows.Forms.Button();
+ 			this.SuspendLayout();
+ 			// 
+diff --git a/Source/Tools/Updater/UpdateBlockedForm.Designer.cs b/Source/Tools/Updater/UpdateBlockedForm.Designer.cs
+index c629827bb..9602290db 100755
+--- a/Source/Tools/Updater/UpdateBlockedForm.Designer.cs
++++ b/Source/Tools/Updater/UpdateBlockedForm.Designer.cs
+@@ -30,6 +30,7 @@ private void InitializeComponent()
+ 		{
+ 			this.accept = new System.Windows.Forms.Button();
+ 			this.label1 = new System.Windows.Forms.Label();
++			this.label1.AutoSize = true;
+ 			this.panel1 = new System.Windows.Forms.Panel();
+ 			this.panel2 = new System.Windows.Forms.Panel();
+ 			this.proceed = new System.Windows.Forms.RadioButton();
+@@ -135,4 +136,4 @@ private void InitializeComponent()
+ 		private System.Windows.Forms.RadioButton proceed;
+ 		private System.Windows.Forms.Panel panel2;
+ 	}
+-}
+\ No newline at end of file
++}
